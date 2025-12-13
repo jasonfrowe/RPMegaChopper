@@ -5,6 +5,7 @@ CMakeUserPresets.json
 /tools
 CMakeLists.txt
 .DS_Store
+Sprites
 *.swp
 *.swo
 *.bak
