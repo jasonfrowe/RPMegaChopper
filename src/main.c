@@ -13,24 +13,6 @@ unsigned SKY_CONFIG;      // Sky Background Configuration
 unsigned SKY_MAP_START;  
 unsigned SKY_MAP_END;
 
-// Helper to calculate the memory offset for a specific animation frame
-// frame_idx: 0 to 21
-// part: 0 = Left Half, 1 = Right Half
-uint16_t get_chopper_sprite_ptr(int frame_idx, int part) {
-    // Each 16x16 block is 512 bytes (256 pixels * 2 bytes)
-    // Each Full Frame (Left+Right) is 1024 bytes
-    uint16_t frame_offset = frame_idx * 1024;
-    uint16_t part_offset = part * 512;
-    return CHOPPER_DATA + frame_offset + part_offset;
-}
-
-
-// ===============================================================
-// Global Game State Variables
-// ===============================================================
-
-
-
 
 static void init_graphics(void)
 {
@@ -71,8 +53,50 @@ static void init_graphics(void)
 
     RIA.step0 = 1;
 
-    for(int i=0; i<300; i++) {
-        RIA.rw0 = 0; // Write 8-bit Tile ID 0
+    // for(int i=0; i<300; i++) {
+    //     RIA.rw0 = 0; // Write 8-bit Tile ID 0
+    // }
+
+    // Loop Y from Top (0) to Bottom (14)
+    for (int y = 0; y < 15; y++) {
+        
+        // Loop X from Left (0) to Right (19)
+        for (int x = 0; x < 20; x++) {
+            
+            uint8_t tile_id = 0; // Default to Sky (0)
+
+            // --- LAYER 1: GROUND (Bottom 2 Rows) ---
+            if (y >= 13) {
+                tile_id = 1; // Solid Ground
+            }
+            
+            // --- LAYER 2: MOUNTAINS (Row 12) ---
+            else if (y == 12) {
+                // Repeat the 8-tile mountain range (8-15)
+                // (x % 8) gives 0-7. We add 8 to get tile IDs 8-15.
+                tile_id = 8 + (x % 8);
+            }
+            
+            // --- LAYER 3: CLOUDS (Specific Coordinates) ---
+            else {
+                // Large Cloud 1 (Tiles 2-3) - Place at (x=3, y=3)
+                if (y == 3 && x == 3) tile_id = 2;
+                if (y == 3 && x == 4) tile_id = 3;
+
+                // Large Cloud 2 (Tiles 4-5) - Place at (x=14, y=5)
+                if (y == 5 && x == 14) tile_id = 4;
+                if (y == 5 && x == 15) tile_id = 5;
+
+                // Small Cloud (Tile 6) - Place at (x=9, y=2)
+                if (y == 2 && x == 9) tile_id = 6;
+
+                // Small Cloud (Tile 7) - Place at (x=18, y=4)
+                if (y == 4 && x == 18) tile_id = 7;
+            }
+
+            // Write the calculated tile ID to XRAM
+            RIA.rw0 = tile_id;
+        }
     }
 
     SKY_CONFIG = SKY_MAP_END;
@@ -112,20 +136,16 @@ static void init_graphics(void)
 
 }
 
-void render_game(void)
-{
-    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xl);
-    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xr);
-    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
-    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
-}
+// void render_game(void)
+// {
+//     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xl);
+//     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xr);
+//     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+//     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+// }
 
-static void update_chopper_animation(uint8_t frame)
-{
-    // Update the chopper sprite to the specified frame
-    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, get_chopper_sprite_ptr(frame, 0));
-    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, get_chopper_sprite_ptr(frame, 1));
-}
+
+uint8_t anim_timer = 0;
 
 int main(void)
 {
@@ -145,7 +165,7 @@ int main(void)
 
     uint8_t vsync_last = RIA.vsync;
 
-    uint8_t anim_timer = 0;
+    anim_timer = 0;
     uint8_t blade_frame = 0;
 
 
@@ -159,24 +179,25 @@ int main(void)
 
         // Update chopper animation frame
         anim_timer++;
-        if (anim_timer >= 2) // Change frame every 6 VBlanks
-        {
-            anim_timer = 0;
+        // if (anim_timer >= 2) // Change frame every 6 VBlanks
+        // {
+        //     anim_timer = 0;
             
-            blade_frame = (blade_frame == 0) ? 1 : 0; // Toggle blade frame between 0 and 1
+        //     blade_frame = (blade_frame == 0) ? 1 : 0; // Toggle blade frame between 0 and 1
 
-            update_chopper_animation(blade_frame);
+        //     update_chopper_animation(blade_frame);
 
-        }
+        // }
 
         // Handle input
         handle_input();
 
         // Update player state
-        update_player();
+        // update_player();
+        update_chopper_state();
 
         // Render the game
-        render_game();
+        // render_game();
 
         // Check for ESC key to exit
         if (key(KEY_ESC)) {

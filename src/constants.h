@@ -5,6 +5,16 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
+// Vertical Boundaries
+// Screen is 240 pixels tall.
+// Top: Leave room for HUD or status bar?
+#define CEILING_Y       20  
+// Bottom: 240 - 16 (Chopper Height) - 10 (Margin for ground tiles)
+#define GROUND_Y        208 
+// Left and Right boundaries can be full width
+#define LEFT_BOUNDARY   (SCREEN_WIDTH / 2 - 80)
+#define RIGHT_BOUNDARY  (SCREEN_WIDTH / 2 + 80 - 16) // 16 = Chopper Width
+
 // XRAM Memory Layout for RPMegaChopper
 // ---------------------------------------------------------------------------
 // We have a total of 65536 bytes (64KB) of XRAM to work with. We'll allocate
@@ -16,7 +26,7 @@
 #define CHOPPER_DATA_SIZE       0x5800 // Size of the chopper sprite data
 #define CHOPPER_DATA            SPRITE_DATA_START // Chopper sprite data address
 #define SKY_DATA               (SPRITE_DATA_START + CHOPPER_DATA_SIZE) // Sky background data address
-#define SKY_DATA_SIZE           0x0080 // Size of the sky background data
+#define SKY_DATA_SIZE           0x0800 // Size of the sky background data (each is 128 bytes so 16 tiles is 16*128=2048=0x800)
 
 #define SPRITE_DATA_END        (SKY_DATA + SKY_DATA_SIZE) // End of used data area
 
@@ -35,6 +45,8 @@
 // -------------------------------------------------------------------------
 // Configuration data for the chopper sprite
 extern unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
+extern unsigned CHOPPER_LEFT_CONFIG; // Chopper Left Sprite Configuration
+extern unsigned CHOPPER_RIGHT_CONFIG; // Chopper Right Sprite Configuration
 
 
 // 4. TILE MAP CONFIGURATION
@@ -96,5 +108,32 @@ extern unsigned SKY_MAP_END;
 #define GP_BTN_HOME       0x10  // bit 4: Home button
 #define GP_BTN_L3         0x20  // bit 5: L3
 #define GP_BTN_R3         0x40  // bit 6: R3
+
+
+// Chopper animation frames
+// LEFT FACING
+#define FRAME_LEFT_IDLE         0   // 0-1
+#define FRAME_TRANS_L_C         2   // 2-3: Turning Left->Center
+#define FRAME_LEFT_ACCEL        10  // 10-11: Facing Left, Moving Left (Forward)
+#define FRAME_LEFT_BRAKE        12  // 12-13: Facing Left, Moving Right (Backwards)
+
+// CENTER FACING
+#define FRAME_CENTER_IDLE       4   // 4-5
+#define FRAME_BANK_LEFT         14  // 14-15: Facing Forward, Moving Left
+#define FRAME_BANK_RIGHT        16  // 16-17: Facing Forward, Moving Right
+
+// RIGHT FACING
+#define FRAME_RIGHT_IDLE        8   // 8-9
+#define FRAME_TRANS_R_C         6   // 6-7: Turning Right->Center
+#define FRAME_RIGHT_ACCEL       20  // 20-21: Facing Right, Moving Right (Forward)
+#define FRAME_RIGHT_BRAKE       18  // 18-19: Facing Right, Moving Left (Backwards)
+
+#define TURN_DURATION           15  // How many frames to hold before turning
+#define MAX_SPEED               3   // Maximum horizontal speed
+
+#define GRAVITY_SPEED   1   // Pixels per frame to fall when idle
+#define CLIMB_SPEED     2   // Pixels per frame to rise
+#define DIVE_SPEED      2   // Pixels per frame to force down
+
 
 #endif // CONSTANTS_H

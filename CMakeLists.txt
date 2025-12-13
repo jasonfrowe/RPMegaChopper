@@ -9,10 +9,10 @@ project(RPMegaChopper C CXX ASM)
 
 add_executable(RPMegaChopper)
 rp6502_asset(RPMegaChopper 0x10000 images/Chopper.bin)
-rp6502_asset(RPMegaChopper 0x15800 images/Sky.bin)
+rp6502_asset(RPMegaChopper 0x15800 images/Tiles.bin)
 rp6502_executable(RPMegaChopper
     Chopper.bin.rp6502
-    Sky.bin.rp6502
+    Tiles.bin.rp6502
     DATA file
     RESET file
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.hlp

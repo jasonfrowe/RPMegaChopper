@@ -10,5 +10,8 @@ extern int16_t chopper_y;
 extern int16_t chopper_frame;
 
 extern void update_player(void);
+extern uint16_t get_chopper_sprite_ptr(int frame_idx, int part);
+extern void update_chopper_animation(uint8_t frame);
+extern void update_chopper_state(void);
 
 #endif // PLAYER_H
