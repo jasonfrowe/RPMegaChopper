@@ -19,4 +19,6 @@ rp6502_executable(RPMegaChopper
 )
 target_sources(RPMegaChopper PRIVATE
     src/main.c
+    src/input.c
+    src/player.c
 )

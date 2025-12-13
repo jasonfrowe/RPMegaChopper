@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "constants.h"
+#include "input.h"
+#include "player.h"
 
 
 unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
@@ -27,10 +29,7 @@ uint16_t get_chopper_sprite_ptr(int frame_idx, int part) {
 // Global Game State Variables
 // ===============================================================
 
-int16_t chopper_xl = SCREEN_WIDTH / 2;
-int16_t chopper_xr = SCREEN_WIDTH / 2 + 16;
-int16_t chopper_y = SCREEN_HEIGHT / 2;
-int16_t chopper_frame = 0; // Current frame index (0-21)
+
 
 
 static void init_graphics(void)
@@ -107,16 +106,49 @@ static void init_graphics(void)
     printf("Sky Map Start at 0x%04X\n", SKY_MAP_START);
     printf("Sky Map End at 0x%04X\n", SKY_MAP_END);
     printf("Sky Background Config at 0x%04X\n", SKY_CONFIG);
+    printf("  GAME_PAD_CONFIG=0x%X\n", GAMEPAD_INPUT);
+    printf("  KEYBOARD_CONFIG=0x%X\n", KEYBOARD_INPUT);
+    printf("  PSG_CONFIG=0x%X\n", PSG_XRAM_ADDR);
 
 }
 
+void render_game(void)
+{
+    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xl);
+    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xr);
+    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+}
+
+static void update_chopper_animation(uint8_t frame)
+{
+    // Update the chopper sprite to the specified frame
+    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, get_chopper_sprite_ptr(frame, 0));
+    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, get_chopper_sprite_ptr(frame, 1));
+}
 
 int main(void)
 {
-    init_graphics();
+
     puts("Hello from RPMegaChopper");
 
+    init_graphics();
+
+    // Enable keyboard input
+    xregn(0, 0, 0, 1, KEYBOARD_INPUT);
+    
+    // Enable gamepad input
+    xregn(0, 0, 2, 1, GAMEPAD_INPUT);
+
+    // Initialize input mappings (ensure `button_mappings` are set)
+    init_input_system();  // new function to set up input mappings
+
     uint8_t vsync_last = RIA.vsync;
+
+    uint8_t anim_timer = 0;
+    uint8_t blade_frame = 0;
+
+
     while (1)
     {
         // Main game loop
@@ -124,5 +156,34 @@ int main(void)
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
+
+        // Update chopper animation frame
+        anim_timer++;
+        if (anim_timer >= 2) // Change frame every 6 VBlanks
+        {
+            anim_timer = 0;
+            
+            blade_frame = (blade_frame == 0) ? 1 : 0; // Toggle blade frame between 0 and 1
+
+            update_chopper_animation(blade_frame);
+
+        }
+
+        // Handle input
+        handle_input();
+
+        // Update player state
+        update_player();
+
+        // Render the game
+        render_game();
+
+        // Check for ESC key to exit
+        if (key(KEY_ESC)) {
+            printf("Exiting game...\n");
+            break;
+        }
+
+
     }
 }
