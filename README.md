@@ -1,6 +1,6 @@
-# RP6502 VSCode Scaffolding for LLVM-MOS
+# RPMegaChopper
 
-This is scaffolding for a new Picocomputer 6502 software project.
+This is a Picocomputer 6502 software project.
 
 ### LLVM PATH notes
 

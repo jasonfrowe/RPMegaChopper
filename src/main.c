@@ -3,5 +3,5 @@
 
 int main(void)
 {
-    puts("Hello from LLVM-MOS");
+    puts("Hello from RPMegaChopper");
 }
