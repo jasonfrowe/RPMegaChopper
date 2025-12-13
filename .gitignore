@@ -1,8 +1,8 @@
 __pycache__
 /.rp6502
 /build
+tools
 CMakeUserPresets.json
-/tools
 CMakeLists.txt
 .DS_Store
 Sprites
