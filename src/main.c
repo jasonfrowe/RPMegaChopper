@@ -1,6 +1,7 @@
 #include <rp6502.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "constants.h"
 #include "input.h"
 #include "player.h"
@@ -9,9 +10,12 @@
 unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
 unsigned CHOPPER_LEFT_CONFIG;  // Chopper Left Sprite Configuration
 unsigned CHOPPER_RIGHT_CONFIG; // Chopper Right Sprite Configuration
-unsigned SKY_CONFIG;      // Sky Background Configuration
-unsigned SKY_MAP_START;  
-unsigned SKY_MAP_END;
+unsigned GROUND_CONFIG;      // Ground Background Configuration
+unsigned GROUND_MAP_START;      // Ground Background Configuration
+unsigned GROUND_MAP_END;
+unsigned CLOUD_A_CONFIG;    // Cloud A Sprite Configuration
+unsigned CLOUD_B_CONFIG;    // Cloud B Sprite Configuration
+unsigned CLOUD_C_CONFIG;    // Cloud C Sprite Configuration
 
 
 static void init_graphics(void)
@@ -42,90 +46,111 @@ static void init_graphics(void)
     xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2, 2); // Enable sprite
 
 
-    SKY_MAP_START = CHOPPER_CONFIG + 3 * sizeof(vga_mode4_sprite_t); // Sky Background Configuration
-    SKY_MAP_END   = (SKY_MAP_START + SKY_MAP_SIZE);
-
     // -----------------------------------------------------
-    // 3. FILL SKY MAP (Plane 2 - Data)
+    // SETUP CLOUDS
     // -----------------------------------------------------
 
-    RIA.addr0 = SKY_MAP_START;
+    for (int i = 0; i < NUM_CLOUDS; i++) {
+        // Random depth shift: 1 (fast), 2 (medium), or 3 (slow)
+        cloud_depth_shift[i] = (rand() % 3) + 1;
+        
+        // Random Height
+        cloud_y[i] = (rand() % (MAX_CLOUD_Y - MIN_CLOUD_Y)) + MIN_CLOUD_Y;
+
+        // Spread out World X initially (0, 320, 640 approx)
+        int32_t screen_pos = (i * 120) << 4; // Spread screen positions
+        cloud_world_x[i] = screen_pos;       // Simple init since camera is 0
+    }
+
+    CLOUD_A_CONFIG = CHOPPER_RIGHT_CONFIG + sizeof(vga_mode4_sprite_t);
+    CLOUD_B_CONFIG = CLOUD_A_CONFIG + sizeof(vga_mode4_sprite_t);
+    CLOUD_C_CONFIG = CLOUD_B_CONFIG + sizeof(vga_mode4_sprite_t);
+
+    xram0_struct_set(CLOUD_A_CONFIG, vga_mode4_sprite_t, x_pos_px, cloud_world_x[0] >> SUBPIXEL_BITS);
+    xram0_struct_set(CLOUD_A_CONFIG, vga_mode4_sprite_t, y_pos_px, cloud_y[0] >> SUBPIXEL_BITS);
+    xram0_struct_set(CLOUD_A_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, CLOUD_A_DATA);
+    xram0_struct_set(CLOUD_A_CONFIG, vga_mode4_sprite_t, log_size, 5);  // 32x32 sprite (2^5)
+    xram0_struct_set(CLOUD_A_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    xram0_struct_set(CLOUD_B_CONFIG, vga_mode4_sprite_t, x_pos_px, cloud_world_x[1] >> SUBPIXEL_BITS);
+    xram0_struct_set(CLOUD_B_CONFIG, vga_mode4_sprite_t, y_pos_px, cloud_y[1] >> SUBPIXEL_BITS);
+    xram0_struct_set(CLOUD_B_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, CLOUD_B_DATA);
+    xram0_struct_set(CLOUD_B_CONFIG, vga_mode4_sprite_t, log_size, 5);  // 32x32 sprite (2^5)
+    xram0_struct_set(CLOUD_B_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    xram0_struct_set(CLOUD_C_CONFIG, vga_mode4_sprite_t, x_pos_px, cloud_world_x[2] >> SUBPIXEL_BITS);
+    xram0_struct_set(CLOUD_C_CONFIG, vga_mode4_sprite_t, y_pos_px, cloud_y[2] >> SUBPIXEL_BITS);
+    xram0_struct_set(CLOUD_C_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, CLOUD_C_DATA);
+    xram0_struct_set(CLOUD_C_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4)
+    xram0_struct_set(CLOUD_C_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    xregn(1, 0, 1, 5, 4, 0, CLOUD_A_CONFIG, 3, 1); // Enable sprite
+
+    // Sky Map
+    GROUND_MAP_START = CLOUD_C_CONFIG + sizeof(vga_mode4_sprite_t); // Sky Background Configuration
+    GROUND_MAP_END   = (GROUND_MAP_START + GROUND_MAP_SIZE);
+
+    // -----------------------------------------------------
+    // 3. FILL GROUND MAP (Plane 2 - Data)
+    // -----------------------------------------------------
+
+    RIA.addr0 = GROUND_MAP_START;
 
     RIA.step0 = 1;
 
-    // Loop Y from Top (0) to Bottom (14)
     for (int y = 0; y < 15; y++) {
-        
-        // Loop X from Left (0) to Right (19)
         for (int x = 0; x < 20; x++) {
-            
-            uint8_t tile_id = 0; // Default to Sky (0)
+            uint8_t tile_id = 0; // Default Transparent (if Color 0 is alpha)
 
-            // --- LAYER 1: GROUND (Bottom 2 Rows) ---
+            // Ground Logic
             if (y >= 13) {
                 tile_id = 1; // Solid Ground
             }
-            
-            // --- LAYER 2: MOUNTAINS (Row 12) ---
             else if (y == 12) {
-                // Repeat the 8-tile mountain range (8-15)
-                // (x % 8) gives 0-7. We add 8 to get tile IDs 8-15.
-                tile_id = 8 + (x % 8);
+                // Mountain Range (2-9)
+                tile_id = 2 + (x % 8);
             }
             
-            // --- LAYER 3: CLOUDS (Specific Coordinates) ---
-            else {
-                // Large Cloud 1 (Tiles 2-3) - Place at (x=3, y=3)
-                if (y == 3 && x == 3) tile_id = 2;
-                if (y == 3 && x == 4) tile_id = 3;
-
-                // Large Cloud 2 (Tiles 4-5) - Place at (x=14, y=5)
-                if (y == 5 && x == 14) tile_id = 4;
-                if (y == 5 && x == 15) tile_id = 5;
-
-                // Small Cloud (Tile 6) - Place at (x=9, y=2)
-                if (y == 2 && x == 9) tile_id = 6;
-
-                // Small Cloud (Tile 7) - Place at (x=18, y=4)
-                if (y == 4 && x == 18) tile_id = 7;
-            }
-
-            // Write the calculated tile ID to XRAM
             RIA.rw0 = tile_id;
         }
     }
 
-    SKY_CONFIG = SKY_MAP_END;
+    GROUND_CONFIG = GROUND_MAP_END;
 
-    // -----------------------------------------------------
-    // 2. CONFIGURE PLANE 2 (The Background)
-    // -----------------------------------------------------
-    // We write to the address SKY_CONFIG
+    // // -----------------------------------------------------
+    // // 2. CONFIGURE PLANE 2 (The Background)
+    // // -----------------------------------------------------
+    // // We write to the address GROUND_CONFIG
 
 
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, x_wrap, true);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, y_wrap, true);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, x_pos_px, 0);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, y_pos_px, 0);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, width_tiles, 20);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, height_tiles, 15);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, xram_data_ptr, SKY_MAP_START);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, xram_palette_ptr, 0xFFFF);
-    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, xram_tile_ptr, SKY_DATA);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_wrap, true);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, y_wrap, true);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_pos_px, 0);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, y_pos_px, 0);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, width_tiles, 20);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, height_tiles, 15);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, xram_data_ptr, GROUND_MAP_START);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, xram_palette_ptr, 0xFFFF);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, xram_tile_ptr, GROUND_DATA);
 
 
     // Enable Plane 2 (Background) at Register 9
     // Args: dev(1), chan(0), reg(9), count(3), mode(2), options(0), config_addr
-    // xregn(1, 0, 9, 3, 2, 10, SKY_CONFIG); 
-    xregn(1, 0, 1, 4, 2, 10, SKY_CONFIG, 0); // Enable sprite
+    xregn(1, 0, 1, 4, 2, 10, GROUND_CONFIG, 0); // Enable sprite
+
+    printf("Next Free XRAM Address: 0x%04X\n", GROUND_CONFIG + sizeof(vga_mode2_config_t));
+
 
     printf("Chopper Data at 0x%04X\n", CHOPPER_DATA);
-    printf("Sky Data at 0x%04X\n", SKY_DATA);
+    printf("Ground Data at 0x%04X\n", GROUND_DATA);
+    printf("Cloud A Data at 0x%04X\n", CLOUD_A_DATA);
+    printf("Cloud B Data at 0x%04X\n", CLOUD_B_DATA);
+    printf("Cloud C Data at 0x%04X\n", CLOUD_C_DATA);
     printf("Chopper Left Sprite Config at 0x%04X\n", CHOPPER_LEFT_CONFIG);
     printf("Chopper Right Sprite Config at 0x%04X\n", CHOPPER_RIGHT_CONFIG);
-    printf("Sky Map Start at 0x%04X\n", SKY_MAP_START);
-    printf("Sky Map End at 0x%04X\n", SKY_MAP_END);
-    printf("Sky Background Config at 0x%04X\n", SKY_CONFIG);
+    printf("Ground Map Start at 0x%04X\n", GROUND_MAP_START);
+    printf("Ground Map End at 0x%04X\n", GROUND_MAP_END);
+    printf("Ground Background Config at 0x%04X\n", GROUND_CONFIG);
     printf("  GAME_PAD_CONFIG=0x%X\n", GAMEPAD_INPUT);
     printf("  KEYBOARD_CONFIG=0x%X\n", KEYBOARD_INPUT);
     printf("  PSG_CONFIG=0x%X\n", PSG_XRAM_ADDR);

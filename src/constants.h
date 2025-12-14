@@ -16,7 +16,7 @@
 // Left and Right boundaries can be full width
 #define LEFT_BOUNDARY   (SCREEN_WIDTH / 2 - 80)
 #define LEFT_BOUNDARY_SUB (LEFT_BOUNDARY << SUBPIXEL_BITS)
-#define RIGHT_BOUNDARY  (SCREEN_WIDTH / 2 + 80 - 16) // 16 = Chopper Width
+#define RIGHT_BOUNDARY  (SCREEN_WIDTH / 2 + 80 - 32) // 32 = Chopper Width
 #define RIGHT_BOUNDARY_SUB (RIGHT_BOUNDARY << SUBPIXEL_BITS)
 
 // Scroll Triggers (in Screen Pixels)
@@ -37,10 +37,16 @@
 #define SPRITE_DATA_START       0x0000 // Starting address in XRAM for sprite data
 #define CHOPPER_DATA_SIZE       0x5800 // Size of the chopper sprite data
 #define CHOPPER_DATA            SPRITE_DATA_START // Chopper sprite data address
-#define SKY_DATA               (SPRITE_DATA_START + CHOPPER_DATA_SIZE) // Sky background data address
-#define SKY_DATA_SIZE           0x0800 // Size of the sky background data (each is 128 bytes so 16 tiles is 16*128=2048=0x800)
+#define GROUND_DATA            (SPRITE_DATA_START + CHOPPER_DATA_SIZE) // Ground tile data address
+#define GROUND_DATA_SIZE        0x500 // Size of the ground tile data (each is 128 bytes so 10 tiles is 10*128=1280=0x500)
+#define CLOUD_A_DATA           (GROUND_DATA + GROUND_DATA_SIZE) // Cloud A sprite data address
+#define CLOUD_A_DATA_SIZE       0x0800 // Size of Cloud A sprite data (512 bytes)
+#define CLOUD_B_DATA           (CLOUD_A_DATA + CLOUD_A_DATA_SIZE) // Cloud B sprite data address
+#define CLOUD_B_DATA_SIZE       0x0800 // Size of Cloud B sprite data (512 bytes)
+#define CLOUD_C_DATA           (CLOUD_B_DATA + CLOUD_B_DATA_SIZE) // Cloud C sprite data address
+#define CLOUD_C_DATA_SIZE       0x0200 // Size of Cloud C sprite data (256 bytes)
 
-#define SPRITE_DATA_END        (SKY_DATA + SKY_DATA_SIZE) // End of used data area
+#define SPRITE_DATA_END        (CLOUD_C_DATA + CLOUD_C_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
@@ -59,15 +65,16 @@
 extern unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
 extern unsigned CHOPPER_LEFT_CONFIG; // Chopper Left Sprite Configuration
 extern unsigned CHOPPER_RIGHT_CONFIG; // Chopper Right Sprite Configuration
-extern unsigned SKY_CONFIG;      // Sky Background Configuration
+extern unsigned GROUND_CONFIG;      // Ground Background Configuration
+extern unsigned CLOUD_A_CONFIG;    // Cloud A Sprite Configuration
 
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------
-// Configuration data for the sky background
-extern unsigned SKY_MAP_START; // Sky Background Configuration
-#define SKY_MAP_SIZE            0x0258  // 600 bytes
-extern unsigned SKY_MAP_END;
+// Configuration data for the ground background
+extern unsigned GROUND_MAP_START; // Ground Background Configuration
+#define GROUND_MAP_SIZE            0x0258  // 600 bytes
+extern unsigned GROUND_MAP_END;
 
 // 5. Keyboard, Gamepad and Sound
 // -------------------------------------------------------------------------
@@ -146,12 +153,17 @@ extern unsigned SKY_MAP_END;
 
 #define TURN_DURATION           15  // How many frames to hold before turning
 #define MAX_SPEED              (1 * ONE_PIXEL + 8) // Max horizontal speed (in subpixels)
-#define ACCEL_RATE      2       // 2/16ths pixel accel per frame
+#define ACCEL_RATE      1       // 2/16ths pixel accel per frame
 #define FRICTION_RATE   1       // 1/16th pixel friction
 
 #define GRAVITY_SPEED   (1 << SUBPIXEL_BITS)   // Pixels per frame to fall when idle
 #define CLIMB_SPEED     (2 << SUBPIXEL_BITS)   // Pixels per frame to rise
 #define DIVE_SPEED      (2 << SUBPIXEL_BITS)   // Pixels per frame to force down
+
+// Clouds
+#define NUM_CLOUDS 3
+#define MIN_CLOUD_Y     (10 << 4)  // 10 pixels from top
+#define MAX_CLOUD_Y     (80 << 4)  // 80 pixels from top (don't hit mountains)
 
 
 #endif // CONSTANTS_H
