@@ -1,4 +1,5 @@
 #include <rp6502.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -12,11 +13,10 @@
 // --- CAMERA & WORLD ---
 // camera_x is the World Position of the left edge of the screen
 int32_t camera_x = 0; 
-int32_t chopper_world_x = CHOPPER_START_POS << SUBPIXEL_BITS; // Start in middle of world
-
+int32_t chopper_world_x = CHOPPER_START_POS << SUBPIXEL_BITS; // This tracks our world X position
 
 // Positions are now stored as Sub-Pixels
-int16_t chopper_xl = CHOPPER_START_POS << SUBPIXEL_BITS;
+int16_t chopper_xl = CHOPPER_START_POS << SUBPIXEL_BITS;  // This tracks our on-screen X position
 int16_t chopper_xr = (CHOPPER_START_POS +16) << SUBPIXEL_BITS; // Right side is 16 pixels to the right
 int16_t chopper_y = GROUND_Y_SUB; // (SCREEN_HEIGHT / 2) << SUBPIXEL_BITS;
 
@@ -263,6 +263,15 @@ void update_chopper_state(void) {
         // velocity_x = 0;
     }
 
+    // World Boundaries
+    int16_t world_x_pos = (chopper_world_x + velocity_x) >> SUBPIXEL_BITS;
+    if (world_x_pos < WORLD_SIZE_MIN) {
+        velocity_x = 0; // Prevent moving left out of world
+    }
+    if (world_x_pos > WORLD_SIZE_MAX) {
+        velocity_x = 0; // Prevent moving right out of world
+    }
+
     // -----------------------------------------------------------
     // 6. APPLY TO POSITION
     // -----------------------------------------------------------
@@ -291,6 +300,8 @@ void update_chopper_state(void) {
         int32_t diff = screen_x_sub - (SCROLL_LEFT_EDGE << SUBPIXEL_BITS);
         camera_x += diff;
     }
+
+    // printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x >> SUBPIXEL_BITS, chopper_xl >> SUBPIXEL_BITS);
 
     // -----------------------------------------------------------
     // 7. UPDATE TO HARDWARE
