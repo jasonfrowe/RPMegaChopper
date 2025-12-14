@@ -13,12 +13,22 @@ rp6502_asset(RPMegaChopper 0x15800 images/Tiles_Ground.bin)
 rp6502_asset(RPMegaChopper 0x15D00 images/Cloud_A.bin)
 rp6502_asset(RPMegaChopper 0x16500 images/Cloud_B.bin)
 rp6502_asset(RPMegaChopper 0x16D00 images/Cloud_C.bin)
+rp6502_asset(RPMegaChopper 0x16F00 images/LandingPad.bin)
+rp6502_asset(RPMegaChopper 0x18100 images/HomeBase.bin)
+rp6502_asset(RPMegaChopper 0x18D00 images/EnemyBase.bin)
+rp6502_asset(RPMegaChopper 0x19D00 images/Flags.bin)
+rp6502_asset(RPMegaChopper 0x1A100 images/Hostages.bin)
 rp6502_executable(RPMegaChopper
     Chopper.bin.rp6502
     Tiles_Ground.bin.rp6502
     Cloud_A.bin.rp6502
     Cloud_B.bin.rp6502
     Cloud_C.bin.rp6502
+    LandingPad.bin.rp6502
+    HomeBase.bin.rp6502
+    EnemyBase.bin.rp6502
+    Flags.bin.rp6502
+    Hostages.bin.rp6502
     DATA file
     RESET file
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.hlp
@@ -27,4 +37,5 @@ target_sources(RPMegaChopper PRIVATE
     src/main.c
     src/input.c
     src/player.c
+    src/clouds.c
 )

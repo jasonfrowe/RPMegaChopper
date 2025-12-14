@@ -8,10 +8,10 @@
 // Vertical Boundaries
 // Screen is 240 pixels tall.
 // Top: Leave room for HUD or status bar?
-#define CEILING_Y       20  
+#define CEILING_Y       40  
 #define CEILING_Y_SUB (CEILING_Y << SUBPIXEL_BITS)
 // Bottom: 240 - 16 (Chopper Height) - 10 (Margin for ground tiles)
-#define GROUND_Y        200 
+#define GROUND_Y        186 
 #define GROUND_Y_SUB (GROUND_Y << SUBPIXEL_BITS)
 // Left and Right boundaries can be full width
 #define LEFT_BOUNDARY   (SCREEN_WIDTH / 2 - 80)
@@ -34,30 +34,40 @@
 
 // Chopper Sprite Sheet (22 frames, 2x 16x16 sprites per frame)
 // Total Size: 22,528 bytes (0x5800)
-#define SPRITE_DATA_START       0x0000 // Starting address in XRAM for sprite data
-#define CHOPPER_DATA_SIZE       0x5800 // Size of the chopper sprite data
+#define SPRITE_DATA_START       0x0000U // Starting address in XRAM for sprite data
+#define CHOPPER_DATA_SIZE       0x5800U // Size of the chopper sprite data
 #define CHOPPER_DATA            SPRITE_DATA_START // Chopper sprite data address
 #define GROUND_DATA            (SPRITE_DATA_START + CHOPPER_DATA_SIZE) // Ground tile data address
-#define GROUND_DATA_SIZE        0x500 // Size of the ground tile data (each is 128 bytes so 10 tiles is 10*128=1280=0x500)
-#define CLOUD_A_DATA           (GROUND_DATA + GROUND_DATA_SIZE) // Cloud A sprite data address
-#define CLOUD_A_DATA_SIZE       0x0800 // Size of Cloud A sprite data (512 bytes)
-#define CLOUD_B_DATA           (CLOUD_A_DATA + CLOUD_A_DATA_SIZE) // Cloud B sprite data address
-#define CLOUD_B_DATA_SIZE       0x0800 // Size of Cloud B sprite data (512 bytes)
-#define CLOUD_C_DATA           (CLOUD_B_DATA + CLOUD_B_DATA_SIZE) // Cloud C sprite data address
-#define CLOUD_C_DATA_SIZE       0x0200 // Size of Cloud C sprite data (256 bytes)
+#define GROUND_DATA_SIZE        0x500U // Size of the ground tile data (each is 128 bytes so 10 tiles is 10*128=1280=0x500)
 
-#define SPRITE_DATA_END        (CLOUD_C_DATA + CLOUD_C_DATA_SIZE) // End of used data area
+#define CLOUD_A_DATA           (GROUND_DATA + GROUND_DATA_SIZE) // Cloud A sprite data address
+#define CLOUD_A_DATA_SIZE       0x0800U // Size of Cloud A sprite data (512 bytes)
+#define CLOUD_B_DATA           (CLOUD_A_DATA + CLOUD_A_DATA_SIZE) // Cloud B sprite data address
+#define CLOUD_B_DATA_SIZE       0x0800U // Size of Cloud B sprite data (512 bytes)
+#define CLOUD_C_DATA           (CLOUD_B_DATA + CLOUD_B_DATA_SIZE) // Cloud C sprite data address
+#define CLOUD_C_DATA_SIZE       0x0200U // Size of Cloud C sprite data (256 bytes)
+
+#define LANDINGPAD_DATA        (CLOUD_C_DATA + CLOUD_C_DATA_SIZE) // Landing Pad sprite data address
+#define LANDINGPAD_DATA_SIZE    0x1200U // Size of Landing Pad sprite data
+
+#define HOMEBASE_DATA          (LANDINGPAD_DATA + LANDINGPAD_DATA_SIZE) // Home Base sprite data address
+#define HOMEBASE_DATA_SIZE      0x0C00U // Size of Home Base sprite data
+
+#define ENEMYBASE_DATA         (HOMEBASE_DATA + HOMEBASE_DATA_SIZE) // Enemy Base sprite data address
+#define ENEMYBASE_DATA_SIZE     0x1000U // Size of Enemy Base sprite
+
+#define FLAGS_DATA             (ENEMYBASE_DATA + ENEMYBASE_DATA_SIZE) // Flag sprite data address
+#define FLAGS_DATA_SIZE         0x0400U // Size of Flag sprite data
+
+#define HOSTAGES_DATA           (FLAGS_DATA + FLAGS_DATA_SIZE) // Hostages sprite data address
+#define HOSTAGES_DATA_SIZE      0x1400U // Size of Hostages sprite data
+
+#define SPRITE_DATA_END        (HOSTAGES_DATA + HOSTAGES_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
 #define SPRITE_SIZE_16x16       512   // Bytes (0x200)
 #define CHOPPER_FRAME_STRIDE    1024  // 2 * 16x16 sprites (0x400)
-
-// 2. BACKGROUND / TILES (Planned)
-// -------------------------------------------------------------------------
-// We start the background data immediately after the chopper to save space.
-// 0x0000 + 0x5800 = 0x5800
-// #define TILE_DATA_START         (CHOPPER_BASE_ADDR + 0x5800) 
 
 // 3. SPRITE CONFIGURATION
 // -------------------------------------------------------------------------
@@ -153,17 +163,27 @@ extern unsigned GROUND_MAP_END;
 
 #define TURN_DURATION           15  // How many frames to hold before turning
 #define MAX_SPEED              (1 * ONE_PIXEL + 8) // Max horizontal speed (in subpixels)
-#define ACCEL_RATE      1       // 2/16ths pixel accel per frame
-#define FRICTION_RATE   1       // 1/16th pixel friction
+#define ACCEL_RATE              1       // 2/16ths pixel accel per frame
+#define FRICTION_RATE           1       // 1/16th pixel friction
 
 #define GRAVITY_SPEED   (1 << SUBPIXEL_BITS)   // Pixels per frame to fall when idle
-#define CLIMB_SPEED     (2 << SUBPIXEL_BITS)   // Pixels per frame to rise
+#define CLIMB_SPEED     (1 << SUBPIXEL_BITS)   // Pixels per frame to rise
 #define DIVE_SPEED      (2 << SUBPIXEL_BITS)   // Pixels per frame to force down
 
-// Clouds
-#define NUM_CLOUDS 3
-#define MIN_CLOUD_Y     (10 << 4)  // 10 pixels from top
-#define MAX_CLOUD_Y     (80 << 4)  // 80 pixels from top (don't hit mountains)
+// Hostages
+#define NUM_HOSTAGES    16
+
+// Landing Pad
+#define NUM_LANDING_PAD_SPRITE 9
+
+// Home Base
+#define NUM_HOMEBASE_SPRITE    6
+
+// Enemy Base
+#define NUM_ENEMYBASE_SPRITE   2
+
+// Flags
+#define NUM_FLAGS              1
 
 
 #endif // CONSTANTS_H
