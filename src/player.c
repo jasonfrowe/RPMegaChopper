@@ -6,21 +6,20 @@
 #include "player.h"
 #include "constants.h"
 
+
+#define CHOPPER_START_POS ((SCREEN_WIDTH / 2) - 16)  // Start roughly in middle of screen
+
 // --- CAMERA & WORLD ---
 // camera_x is the World Position of the left edge of the screen
 int32_t camera_x = 0; 
-int32_t chopper_world_x = 160 << SUBPIXEL_BITS; // Start in middle of world
+int32_t chopper_world_x = CHOPPER_START_POS << SUBPIXEL_BITS; // Start in middle of world
 
 
 // Positions are now stored as Sub-Pixels
-// Start at 160 * 16 = 2560
-int16_t chopper_xl = (SCREEN_WIDTH / 2) << SUBPIXEL_BITS;
-int16_t chopper_xr = ((SCREEN_WIDTH / 2) + 16) << SUBPIXEL_BITS;
-int16_t chopper_y = (SCREEN_HEIGHT / 2) << SUBPIXEL_BITS;
+int16_t chopper_xl = CHOPPER_START_POS << SUBPIXEL_BITS;
+int16_t chopper_xr = (CHOPPER_START_POS +16) << SUBPIXEL_BITS; // Right side is 16 pixels to the right
+int16_t chopper_y = GROUND_Y_SUB; // (SCREEN_HEIGHT / 2) << SUBPIXEL_BITS;
 
-// int16_t chopper_xl = SCREEN_WIDTH / 2;
-// int16_t chopper_xr = SCREEN_WIDTH / 2 + 16;
-// int16_t chopper_y = SCREEN_HEIGHT / 2;
 int16_t chopper_frame = 0; // Current frame index (0-21)
 
 typedef enum {
@@ -30,7 +29,7 @@ typedef enum {
 } ChopperHeading;
 
 // Global State Variables
-ChopperHeading current_heading = FACING_CENTER;
+ChopperHeading current_heading = FACING_LEFT;
 int8_t  turn_timer = 0;       // Counts how long we hold a direction to turn
 int16_t velocity_x = 0;
 uint8_t blade_frame = 0;      // 0 or 1 (Animation toggle)
@@ -298,9 +297,6 @@ void update_chopper_state(void) {
     // -----------------------------------------------------------
 
     // We convert from Sub-Pixels to Screen Pixels here using shift (>>)
-    // int16_t hardware_xl = chopper_xl >> SUBPIXEL_BITS;
-    // int16_t hardware_xr = chopper_xr >> SUBPIXEL_BITS;
-    // int16_t hardware_y = chopper_y >> SUBPIXEL_BITS;
     int16_t hardware_xl = (chopper_world_x - camera_x) >> SUBPIXEL_BITS;
     int16_t hardware_xr = (chopper_world_x - camera_x + 256) >> SUBPIXEL_BITS;
     int16_t hardware_y = chopper_y >> SUBPIXEL_BITS;

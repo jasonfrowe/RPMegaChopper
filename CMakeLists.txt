@@ -38,4 +38,5 @@ target_sources(RPMegaChopper PRIVATE
     src/input.c
     src/player.c
     src/clouds.c
+    src/landing.c
 )

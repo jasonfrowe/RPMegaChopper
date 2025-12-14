@@ -6,6 +6,7 @@
 #include "input.h"
 #include "player.h"
 #include "clouds.h"
+#include "landing.h"
 
 
 unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
@@ -236,15 +237,6 @@ static void init_graphics(void)
 
 }
 
-// void render_game(void)
-// {
-//     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xl);
-//     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xr);
-//     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
-//     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
-// }
-
-
 uint8_t anim_timer = 0;
 
 int main(void)
@@ -287,6 +279,8 @@ int main(void)
         update_chopper_state();
         // Update clouds
         update_clouds();
+        // Update landing pad
+        update_landing();
 
         // Render the game
         // render_game();
