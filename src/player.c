@@ -5,9 +5,22 @@
 #include "player.h"
 #include "constants.h"
 
-int16_t chopper_xl = SCREEN_WIDTH / 2;
-int16_t chopper_xr = SCREEN_WIDTH / 2 + 16;
-int16_t chopper_y = SCREEN_HEIGHT / 2;
+
+// --- CAMERA & WORLD ---
+// camera_x is the World Position of the left edge of the screen
+int32_t camera_x = 0; 
+int32_t chopper_world_x = 160 << SUBPIXEL_BITS; // Start in middle of world
+
+
+// Positions are now stored as Sub-Pixels
+// Start at 160 * 16 = 2560
+int16_t chopper_xl = (SCREEN_WIDTH / 2) << SUBPIXEL_BITS;
+int16_t chopper_xr = ((SCREEN_WIDTH / 2) + 16) << SUBPIXEL_BITS;
+int16_t chopper_y = (SCREEN_HEIGHT / 2) << SUBPIXEL_BITS;
+
+// int16_t chopper_xl = SCREEN_WIDTH / 2;
+// int16_t chopper_xr = SCREEN_WIDTH / 2 + 16;
+// int16_t chopper_y = SCREEN_HEIGHT / 2;
 int16_t chopper_frame = 0; // Current frame index (0-21)
 
 typedef enum {
@@ -131,8 +144,8 @@ void update_chopper_state(void) {
         }
 
         // Apply Friction while turning (Helicopter shouldn't stop instantly)
-        if (velocity_x > 0) velocity_x--;
-        if (velocity_x < 0) velocity_x++;
+        if (velocity_x > 0) velocity_x -= FRICTION_RATE;
+        if (velocity_x < 0) velocity_x += FRICTION_RATE;
 
         // End of Turn
         if (turn_timer == 0) {
@@ -147,48 +160,51 @@ void update_chopper_state(void) {
         if (current_heading == FACING_CENTER) {
             if (input_left) {
                 base_frame = FRAME_BANK_LEFT;
-                if (velocity_x > -1) velocity_x--; 
+                // Drift Left
+                if (velocity_x > -ONE_PIXEL) velocity_x -= ACCEL_RATE; 
             } 
             else if (input_right) {
                 base_frame = FRAME_BANK_RIGHT;
-                if (velocity_x < 1) velocity_x++;
+                // Drift Right
+                if (velocity_x < ONE_PIXEL) velocity_x += ACCEL_RATE;
             } 
             else {
                 base_frame = FRAME_CENTER_IDLE;
-                if (velocity_x < 0) velocity_x++; // Friction
-                if (velocity_x > 0) velocity_x--;
+                // Sub-pixel Friction
+                if (velocity_x < 0) velocity_x += FRICTION_RATE;
+                if (velocity_x > 0) velocity_x -= FRICTION_RATE;
             }
         }
         // CASE B: FACING LEFT
         else if (current_heading == FACING_LEFT) {
             if (input_left) {
                 base_frame = FRAME_LEFT_ACCEL;
-                if (velocity_x > -MAX_SPEED) velocity_x--;
+                if (velocity_x > -MAX_SPEED) velocity_x -= ACCEL_RATE;
             }
             else if (input_right) {
                 base_frame = FRAME_LEFT_BRAKE;
-                if (velocity_x < MAX_SPEED) velocity_x++;
+                if (velocity_x < MAX_SPEED) velocity_x += ACCEL_RATE;
             }
             else {
                 base_frame = FRAME_LEFT_IDLE;
-                if (velocity_x < 0) velocity_x++;
-                if (velocity_x > 0) velocity_x--;
+                if (velocity_x < 0) velocity_x += FRICTION_RATE;
+                if (velocity_x > 0) velocity_x -= FRICTION_RATE;
             }
         }
         // CASE C: FACING RIGHT
         else if (current_heading == FACING_RIGHT) {
             if (input_right) {
                 base_frame = FRAME_RIGHT_ACCEL;
-                if (velocity_x < MAX_SPEED) velocity_x++;
+                if (velocity_x < MAX_SPEED) velocity_x += ACCEL_RATE;
             }
             else if (input_left) {
                 base_frame = FRAME_RIGHT_BRAKE;
-                if (velocity_x > -MAX_SPEED) velocity_x--;
+                if (velocity_x > -MAX_SPEED) velocity_x -= ACCEL_RATE;
             }
             else {
                 base_frame = FRAME_RIGHT_IDLE;
-                if (velocity_x < 0) velocity_x++;
-                if (velocity_x > 0) velocity_x--;
+                if (velocity_x < 0) velocity_x += FRICTION_RATE;
+                if (velocity_x > 0) velocity_x -= FRICTION_RATE;
             }
         }
     }
@@ -209,7 +225,7 @@ void update_chopper_state(void) {
     else {
         // No Input -> Passive Descent (Gravity)
         // Check if we are already on the ground to prevent "jitter"
-        if (chopper_y < GROUND_Y) {
+        if (chopper_y < GROUND_Y_SUB) {
             chopper_y += GRAVITY_SPEED;
         }
     }
@@ -219,29 +235,29 @@ void update_chopper_state(void) {
     // -----------------------------------------------------------
 
     // Hit the Ceiling?
-    if (chopper_y < CEILING_Y) {
-        chopper_y = CEILING_Y;
+    if (chopper_y < CEILING_Y_SUB) {
+        chopper_y = CEILING_Y_SUB;
     }
     
     // Hit the Ground?
-    if (chopper_y > GROUND_Y) {
-        chopper_y = GROUND_Y;
+    if (chopper_y > GROUND_Y_SUB) {
+        chopper_y = GROUND_Y_SUB;
         
         // Optional: If you want to kill horizontal momentum when landing
         velocity_x = 0; 
     }
 
     // Left Boundary
-    if (chopper_xl < LEFT_BOUNDARY) {
-        chopper_xl = LEFT_BOUNDARY;
-        chopper_xr = chopper_xl + 16;
+    if (chopper_xl < LEFT_BOUNDARY_SUB) {
+        chopper_xl = LEFT_BOUNDARY_SUB;
+        chopper_xr = chopper_xl + 256; // if SUBPIXEL_BITS changed, update here too
         // velocity_x = 0;
     }
 
     // Right Boundary
-    if (chopper_xr > RIGHT_BOUNDARY) {
-        chopper_xr = RIGHT_BOUNDARY;
-        chopper_xl = chopper_xr - 16;
+    if (chopper_xr > RIGHT_BOUNDARY_SUB) {
+        chopper_xr = RIGHT_BOUNDARY_SUB;
+        chopper_xl = chopper_xr - 256; // if SUBPIXEL_BITS changed, update here too
         // velocity_x = 0;
     }
 
@@ -253,9 +269,10 @@ void update_chopper_state(void) {
     chopper_xl += velocity_x;
     chopper_xr += velocity_x;
 
-    // // Apply Vertical Movement (Standard layout: Up=Minus, Down=Plus)
-    // if (input_up)   chopper_y -= 2;
-    // if (input_down) chopper_y += 2;
+    // We convert from Sub-Pixels to Screen Pixels here using shift (>>)
+    int16_t hardware_xl = chopper_xl >> SUBPIXEL_BITS;
+    int16_t hardware_xr = chopper_xr >> SUBPIXEL_BITS;
+    int16_t hardware_y = chopper_y >> SUBPIXEL_BITS;
 
     // Calculate Final Pointer (Base + Blade Toggle)
     // 1024 bytes per Frame Pair (Left Sprite + Right Sprite)
@@ -266,11 +283,11 @@ void update_chopper_state(void) {
     
     // Left Half
     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(CHOPPER_DATA + ptr_offset));
-    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xl);
-    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, hardware_xl);
+    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
 
     // Right Half (Offset by 512 bytes for the image data)
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(CHOPPER_DATA + ptr_offset + 512));
-    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xr);
-    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, hardware_xr);
+    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
 }

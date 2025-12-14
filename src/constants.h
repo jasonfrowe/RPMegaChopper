@@ -9,11 +9,15 @@
 // Screen is 240 pixels tall.
 // Top: Leave room for HUD or status bar?
 #define CEILING_Y       20  
+#define CEILING_Y_SUB (CEILING_Y << SUBPIXEL_BITS)
 // Bottom: 240 - 16 (Chopper Height) - 10 (Margin for ground tiles)
-#define GROUND_Y        208 
+#define GROUND_Y        200 
+#define GROUND_Y_SUB (GROUND_Y << SUBPIXEL_BITS)
 // Left and Right boundaries can be full width
 #define LEFT_BOUNDARY   (SCREEN_WIDTH / 2 - 80)
+#define LEFT_BOUNDARY_SUB (LEFT_BOUNDARY << SUBPIXEL_BITS)
 #define RIGHT_BOUNDARY  (SCREEN_WIDTH / 2 + 80 - 16) // 16 = Chopper Width
+#define RIGHT_BOUNDARY_SUB (RIGHT_BOUNDARY << SUBPIXEL_BITS)
 
 // XRAM Memory Layout for RPMegaChopper
 // ---------------------------------------------------------------------------
@@ -109,6 +113,9 @@ extern unsigned SKY_MAP_END;
 #define GP_BTN_L3         0x20  // bit 5: L3
 #define GP_BTN_R3         0x40  // bit 6: R3
 
+// --- PHYSICS CONSTANTS ---
+#define SUBPIXEL_BITS   4       // 2^4 = 16
+#define ONE_PIXEL       (1 << SUBPIXEL_BITS) // Value 16
 
 // Chopper animation frames
 // LEFT FACING
@@ -129,11 +136,13 @@ extern unsigned SKY_MAP_END;
 #define FRAME_RIGHT_BRAKE       18  // 18-19: Facing Right, Moving Left (Backwards)
 
 #define TURN_DURATION           15  // How many frames to hold before turning
-#define MAX_SPEED               3   // Maximum horizontal speed
+#define MAX_SPEED              (1 * ONE_PIXEL + 8) // Max horizontal speed (in subpixels)
+#define ACCEL_RATE      2       // 2/16ths pixel accel per frame
+#define FRICTION_RATE   1       // 1/16th pixel friction
 
-#define GRAVITY_SPEED   1   // Pixels per frame to fall when idle
-#define CLIMB_SPEED     2   // Pixels per frame to rise
-#define DIVE_SPEED      2   // Pixels per frame to force down
+#define GRAVITY_SPEED   (1 << SUBPIXEL_BITS)   // Pixels per frame to fall when idle
+#define CLIMB_SPEED     (2 << SUBPIXEL_BITS)   // Pixels per frame to rise
+#define DIVE_SPEED      (2 << SUBPIXEL_BITS)   // Pixels per frame to force down
 
 
 #endif // CONSTANTS_H

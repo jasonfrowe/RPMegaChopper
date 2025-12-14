@@ -24,14 +24,17 @@ static void init_graphics(void)
     CHOPPER_RIGHT_CONFIG = CHOPPER_CONFIG + sizeof(vga_mode4_sprite_t); // Chopper Right Sprite Configuration
 
     // Initialize chopper sprite configuration
-    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xl);
-    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+    int16_t hardware_xl = chopper_xl >> SUBPIXEL_BITS;
+    int16_t hardware_xr = chopper_xr >> SUBPIXEL_BITS;
+    int16_t hardware_y = chopper_y >> SUBPIXEL_BITS;
+    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, hardware_xl);
+    xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, get_chopper_sprite_ptr(0, 0));
     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4)
     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, chopper_xr);
-    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, chopper_y);
+    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, hardware_xr);
+    xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, get_chopper_sprite_ptr(0, 1));
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4)
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
@@ -48,14 +51,7 @@ static void init_graphics(void)
 
     RIA.addr0 = SKY_MAP_START;
 
-    // RIA.addr0 = SKY_MAP_START & 0xFF; // Extracts the Low Byte (0x90)
-    // RIA.addr1 = SKY_MAP_START >> 8;   // Extracts the High Byte (0x58)
-
     RIA.step0 = 1;
-
-    // for(int i=0; i<300; i++) {
-    //     RIA.rw0 = 0; // Write 8-bit Tile ID 0
-    // }
 
     // Loop Y from Top (0) to Bottom (14)
     for (int y = 0; y < 15; y++) {
