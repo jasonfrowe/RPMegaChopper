@@ -1,64 +1,66 @@
 # RPMegaChopper
 
-This is a Picocomputer 6502 software project.
+**RPMegaChopper** is a clone of the classic game *Choplifter*, developed for the [Picocomputer 6502 (RP6502)](https://picocomputer.github.io).
 
-### LLVM PATH notes
+## Gameplay
 
-LLVM-MOS must be in your PATH. However, this may conflict with other LLVM
-installations, like the one that comes with your operating system.
-In that case, you can adjust the path for only CMake with a VSCode setting.
-Add a file `.vscode/settings.json` with the following contents. Adjust the
-path for where you installed LLVM-MOS.
-```
-{
-    "cmake.environment": {
-        "PATH": "~/llvm-mos/bin:${env:PATH}"
-    }
-}
-```
+Command your helicopter behind enemy lines! Your mission is to rescue hostages being held in prisoner of war camps. 
 
-### Linux Tools Install:
- * [VSCode](https://code.visualstudio.com/). This has its own installer.
- * An install of [LLVM-MOS](https://llvm-mos.org/wiki/Welcome).
-   See PATH notes above.
- * The following tools installed from your package manager:
-    * `sudo apt install cmake python3 pip git build-essential`
-    * `pip install pyserial`
+- **Fly**: Navigate your chopper through hostile territory.
+- **Rescue**: Land near the barracks to pick up hostages.
+- **Return**: Transport them safely to the US base.
+- **Survive**: Avoid or destroy enemy tanks and jet fighters.
 
-### Windows Tools Install:
- * [VSCode](https://code.visualstudio.com/). This has its own installer.
- * An install of [LLVM-MOS](https://llvm-mos.org/wiki/Welcome).
-   See PATH notes above.
- * Install python by typing `python3` which will launch the Microsoft Store
-   where you start the install. If python runs, this has already been done,
-   exit python with Ctrl-Z plus Return.
- * Install the python serial library with `pip install pyserial`.
- * `winget install -e --id Kitware.CMake`.
- * `winget install -e --id GnuWin32.Make`.
-    Add "C:\Program Files (x86)\GnuWin32\bin" to your path.
- * `winget install -e --id Git.Git`.
+## Development
 
-### Getting Started:
-Go to the [GitHub template](https://github.com/picocomputer/vscode-llvm-mos)
-and select "Use this template" then "Create a new repository". GitHub will
-make a clean project for you to start with. Then you can download the
-repository and open the files.
+This project uses the [LLVM-MOS](https://llvm-mos.org/) compiler suite and CMake for the build system.
 
-```
-$ git clone [path_to_github]
-$ cd [to_where_it_cloned]
-$ code .
+### Prerequisites
+
+1.  **LLVM-MOS SDK**: Ensure you have the LLVM-MOS SDK installed and available in your path (or configured in CMake presets).
+2.  **CMake**: Version 3.18 or higher.
+3.  **Python 3**: Required for the asset conversion tools and upload scripts.
+4.  **Python Libraries**: `pyserial` and `Pillow` (for image processing).
+    ```bash
+    pip install pyserial Pillow
+    ```
+
+### Building
+
+This project is configured with CMake presets.
+
+1.  **Configure**:
+    ```bash
+    cmake --preset jason-local
+    ```
+    *(Note: You may need to adjust `CMakeUserPresets.json` to point to your specific LLVM-MOS installation path.)*
+
+2.  **Build**:
+    ```bash
+    cmake --build build
+    ```
+
+### Running
+
+Connect your RP6502 via USB.
+
+```bash
+./tools/rp6502.py run build/RPMegaChopper.rp6502
 ```
 
-Install the extensions and choose the default or obvious choice if VSCode
-prompts you. Choose "[Unspecified]" for the CMake kit.
+### Asset Pipeline
 
-"Start Debugging" (F5) will build your project and upload it to the
-Picocomputer over a USB cable plugged into the Pico VGA. There is no debugger
-for the 6502; this process will exit immediately after the upload.
-If the default communications device doesn't work, edit ".rp6502" in the
-project root folder. This file will be created the first time you
-"Start Debugging" and will be ignored by git.
+Graphics are stored in the `Sprites/` directory as PNG files. They are converted into RP6502-compatible binary formats using the `Sprites/convert_sprite.py` script.
 
-Edit CMakeLists.txt to add new source and asset files. It's
-pretty normal C/ASM development from here on.
+- **Sprites**: Converted to 16-bit RGB555 format (with alpha transparency).
+- **Tiles**: Converted to 4-bit IRGB format.
+
+Example conversion:
+```bash
+python3 Sprites/convert_sprite.py Sprites/Chopper.png -o images/Chopper.bin --mode sprite
+```
+
+## Credits
+
+- Original *Choplifter* game by Dan Gorlin.
+- RP6502 Platform by Rumbledethumps.

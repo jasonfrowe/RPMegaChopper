@@ -394,7 +394,7 @@ void update_chopper_state(void) {
         // PARALLAX MATH:
         // Cloud Screen X = Cloud World X - (Camera X * 0.5)
         // We use >> 1 to divide camera position by 2.
-        int32_t cloud_screen_sub = cloud_world_x[i] - (camera_x >> 1);
+        int32_t cloud_screen_sub = cloud_world_x[i] - (camera_x >> 2);
         int16_t cloud_screen_px = cloud_screen_sub >> SUBPIXEL_BITS;
 
         // WRAPPING LOGIC (Infinite Clouds)
