@@ -78,6 +78,9 @@ extern unsigned CHOPPER_RIGHT_CONFIG; // Chopper Right Sprite Configuration
 extern unsigned GROUND_CONFIG;      // Ground Background Configuration
 extern unsigned CLOUD_A_CONFIG;    // Cloud A Sprite Configuration
 extern unsigned LANDINGPAD_CONFIG; // Landing Pad Sprite Configuration
+extern unsigned HOMEBASE_CONFIG;   // Home Base Sprite Configuration
+extern unsigned ENEMYBASE_CONFIG;  // Enemy Base Sprite Configuration
+extern unsigned FLAGS_CONFIG;      // Flags Sprite Configuration
 
 
 // 4. TILE MAP CONFIGURATION
@@ -173,9 +176,6 @@ extern unsigned GROUND_MAP_END;
 
 // Hostages
 #define NUM_HOSTAGES    16
-
-// Home Base
-#define NUM_HOMEBASE_SPRITE    6
 
 // Enemy Base
 #define NUM_ENEMYBASE_SPRITE   2
