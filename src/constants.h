@@ -5,6 +5,30 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
+
+    
+// --- WORLD DIMENSIONS ---
+// Total World Width in Pixels
+#define WORLD_WIDTH_PX      4096 
+
+// Left Boundary (Give a 16px buffer so we don't hit the absolute edge)
+#define WORLD_MIN_X_SUB     (16 << SUBPIXEL_BITS)
+
+// Right Boundary (4096 - 16px buffer)
+#define WORLD_MAX_X_SUB     ((WORLD_WIDTH_PX - 16) << SUBPIXEL_BITS)
+
+// --- STARTING POSITION ---
+// Start near the Right edge (e.g., 200 pixels from the end)
+// This matches Choplifter (Home base is on the right)
+#define CHOPPER_START_X     ((WORLD_WIDTH_PX - 300) << SUBPIXEL_BITS)
+
+// Camera max (World Width - Screen Width)
+#define CAMERA_MAX_X        ((WORLD_WIDTH_PX - 320) << SUBPIXEL_BITS)
+
+  
+
+
+
 // Vertical Boundaries
 // Screen is 240 pixels tall.
 // Top: Leave room for HUD or status bar?
@@ -22,10 +46,6 @@
 // Scroll Triggers (in Screen Pixels)
 #define SCROLL_LEFT_EDGE    (LEFT_BOUNDARY)
 #define SCROLL_RIGHT_EDGE   (RIGHT_BOUNDARY)
-
-// World Limits (Optional, for now infinite)
-#define WORLD_MIN           0
-#define WORLD_MAX           (10000 << SUBPIXEL_BITS)
 
 // XRAM Memory Layout for RPMegaChopper
 // ---------------------------------------------------------------------------
@@ -179,9 +199,6 @@ extern unsigned GROUND_MAP_END;
 
 // Enemy Base
 #define NUM_ENEMYBASE_SPRITE   2
-
-// Flags
-#define NUM_FLAGS              1
 
 
 #endif // CONSTANTS_H

@@ -40,4 +40,5 @@ target_sources(RPMegaChopper PRIVATE
     src/clouds.c
     src/landing.c
     src/homebase.c
+    src/flags.c
 )

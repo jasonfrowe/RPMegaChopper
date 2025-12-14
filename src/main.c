@@ -8,6 +8,7 @@
 #include "clouds.h"
 #include "landing.h"
 #include "homebase.h"
+#include "flags.h"
 
 
 unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
@@ -284,6 +285,8 @@ int main(void)
         update_landing();
         // Update home base
         update_homebase();
+        // Update flags
+        update_flags();
 
         // Render the game
         // render_game();
