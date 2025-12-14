@@ -262,16 +262,44 @@ void update_chopper_state(void) {
     }
 
     // -----------------------------------------------------------
-    // 4. APPLY TO HARDWARE
+    // 6. APPLY TO POSITION
     // -----------------------------------------------------------
     
     // Apply Horizontal Velocity
     chopper_xl += velocity_x;
     chopper_xr += velocity_x;
 
+    // Update World Position
+    chopper_world_x += velocity_x;
+
+    // Calculate Screen Position (Where is the chopper relative to camera?)
+    int16_t screen_x_sub = chopper_world_x - camera_x;
+    int16_t screen_x_px  = screen_x_sub >> SUBPIXEL_BITS;
+
+    // Pushing Right Edge?
+    if (screen_x_px > SCROLL_RIGHT_EDGE) {
+        // Move camera right to keep chopper at edge
+        int32_t diff = screen_x_sub - (SCROLL_RIGHT_EDGE << SUBPIXEL_BITS);
+        camera_x += diff;
+    }
+    
+    // Pushing Left Edge?
+    if (screen_x_px < SCROLL_LEFT_EDGE) {
+        // Move camera left
+        int32_t diff = screen_x_sub - (SCROLL_LEFT_EDGE << SUBPIXEL_BITS);
+        camera_x += diff;
+    }
+
+    // -----------------------------------------------------------
+    // 7. UPDATE TO HARDWARE
+    // -----------------------------------------------------------
+
     // We convert from Sub-Pixels to Screen Pixels here using shift (>>)
-    int16_t hardware_xl = chopper_xl >> SUBPIXEL_BITS;
-    int16_t hardware_xr = chopper_xr >> SUBPIXEL_BITS;
+    // int16_t hardware_xl = chopper_xl >> SUBPIXEL_BITS;
+    // int16_t hardware_xr = chopper_xr >> SUBPIXEL_BITS;
+    // int16_t hardware_y = chopper_y >> SUBPIXEL_BITS;
+    int16_t hardware_xl = (chopper_world_x - camera_x) >> SUBPIXEL_BITS;
+    int16_t hardware_xr = (chopper_world_x - camera_x + 256) >> SUBPIXEL_BITS;
     int16_t hardware_y = chopper_y >> SUBPIXEL_BITS;
 
     // Calculate Final Pointer (Base + Blade Toggle)
@@ -290,4 +318,8 @@ void update_chopper_state(void) {
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(CHOPPER_DATA + ptr_offset + 512));
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, hardware_xr);
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
+
+
+    xram0_struct_set(SKY_CONFIG, vga_mode2_config_t, x_pos_px, -(camera_x >> SUBPIXEL_BITS));
+
 }

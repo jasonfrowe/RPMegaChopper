@@ -19,6 +19,14 @@
 #define RIGHT_BOUNDARY  (SCREEN_WIDTH / 2 + 80 - 16) // 16 = Chopper Width
 #define RIGHT_BOUNDARY_SUB (RIGHT_BOUNDARY << SUBPIXEL_BITS)
 
+// Scroll Triggers (in Screen Pixels)
+#define SCROLL_LEFT_EDGE    (LEFT_BOUNDARY)
+#define SCROLL_RIGHT_EDGE   (RIGHT_BOUNDARY)
+
+// World Limits (Optional, for now infinite)
+#define WORLD_MIN           0
+#define WORLD_MAX           (10000 << SUBPIXEL_BITS)
+
 // XRAM Memory Layout for RPMegaChopper
 // ---------------------------------------------------------------------------
 // We have a total of 65536 bytes (64KB) of XRAM to work with. We'll allocate
@@ -51,6 +59,7 @@
 extern unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
 extern unsigned CHOPPER_LEFT_CONFIG; // Chopper Left Sprite Configuration
 extern unsigned CHOPPER_RIGHT_CONFIG; // Chopper Right Sprite Configuration
+extern unsigned SKY_CONFIG;      // Sky Background Configuration
 
 
 // 4. TILE MAP CONFIGURATION
