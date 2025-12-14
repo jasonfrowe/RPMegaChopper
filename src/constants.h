@@ -5,28 +5,8 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-
-    
-// --- WORLD DIMENSIONS ---
-// Total World Width in Pixels
-#define WORLD_WIDTH_PX      4096 
-
-// Left Boundary (Give a 16px buffer so we don't hit the absolute edge)
-#define WORLD_MIN_X_SUB     (16 << SUBPIXEL_BITS)
-
-// Right Boundary (4096 - 16px buffer)
-#define WORLD_MAX_X_SUB     ((WORLD_WIDTH_PX - 16) << SUBPIXEL_BITS)
-
-// --- STARTING POSITION ---
-// Start near the Right edge (e.g., 200 pixels from the end)
-// This matches Choplifter (Home base is on the right)
-#define CHOPPER_START_X     ((WORLD_WIDTH_PX - 300) << SUBPIXEL_BITS)
-
-// Camera max (World Width - Screen Width)
-#define CAMERA_MAX_X        ((WORLD_WIDTH_PX - 320) << SUBPIXEL_BITS)
-
-  
-
+#define WORLD_SIZE_MAX 250
+#define WORLD_SIZE_MIN -4096
 
 
 // Vertical Boundaries
@@ -190,7 +170,7 @@ extern unsigned GROUND_MAP_END;
 #define ACCEL_RATE              1       // 2/16ths pixel accel per frame
 #define FRICTION_RATE           1       // 1/16th pixel friction
 
-#define GRAVITY_SPEED   (1 << SUBPIXEL_BITS)   // Pixels per frame to fall when idle
+#define GRAVITY_SPEED   8 // (1 << SUBPIXEL_BITS)   // Pixels per frame to fall when idle
 #define CLIMB_SPEED     (1 << SUBPIXEL_BITS)   // Pixels per frame to rise
 #define DIVE_SPEED      (2 << SUBPIXEL_BITS)   // Pixels per frame to force down
 
