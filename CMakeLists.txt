@@ -46,4 +46,5 @@ target_sources(RPMegaChopper PRIVATE
     src/enemybase.c
     src/bullets.c
     src/hostages.c
+    src/hud.c
 )

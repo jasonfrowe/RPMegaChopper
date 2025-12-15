@@ -12,23 +12,26 @@
 #include "enemybase.h"
 #include "bullets.h"
 #include "hostages.h"
+#include "hud.h"
 
 
-unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
-unsigned CHOPPER_LEFT_CONFIG;  // Chopper Left Sprite Configuration
-unsigned CHOPPER_RIGHT_CONFIG; // Chopper Right Sprite Configuration
-unsigned GROUND_CONFIG;      // Ground Background Configuration
+unsigned CHOPPER_CONFIG;        // Chopper Sprite Configuration
+unsigned CHOPPER_LEFT_CONFIG;   // Chopper Left Sprite Configuration
+unsigned CHOPPER_RIGHT_CONFIG;  // Chopper Right Sprite Configuration
+unsigned GROUND_CONFIG;         // Ground Background Configuration
 unsigned GROUND_MAP_START;      // Ground Background Configuration
 unsigned GROUND_MAP_END;
-unsigned CLOUD_A_CONFIG;    // Cloud A Sprite Configuration
-unsigned CLOUD_B_CONFIG;    // Cloud B Sprite Configuration
-unsigned CLOUD_C_CONFIG;    // Cloud C Sprite Configuration
-unsigned LANDINGPAD_CONFIG; // Landing Pad Sprite Configuration
-unsigned HOMEBASE_CONFIG;   // Home Base Sprite Configuration
-unsigned ENEMYBASE_CONFIG;  // Enemy Base Sprite Configuration
-unsigned FLAGS_CONFIG;      // Flags Sprite Configuration
-unsigned BULLET_CONFIG;     // Bullet Sprite Configuration
-unsigned HOSTAGE_CONFIG;   // Hostage Sprite Configuration
+unsigned CLOUD_A_CONFIG;        // Cloud A Sprite Configuration
+unsigned CLOUD_B_CONFIG;        // Cloud B Sprite Configuration
+unsigned CLOUD_C_CONFIG;        // Cloud C Sprite Configuration
+unsigned LANDINGPAD_CONFIG;     // Landing Pad Sprite Configuration
+unsigned HOMEBASE_CONFIG;       // Home Base Sprite Configuration
+unsigned ENEMYBASE_CONFIG;      // Enemy Base Sprite Configuration
+unsigned FLAGS_CONFIG;          // Flags Sprite Configuration
+unsigned BULLET_CONFIG;         // Bullet Sprite Configuration
+unsigned HOSTAGE_CONFIG;        // Hostage Sprite Configuration
+unsigned TEXT_CONFIG;           // Text Plane Configuration
+unsigned text_message_addr;     // Text message address
 
 
 static void init_graphics(void)
@@ -254,7 +257,42 @@ static void init_graphics(void)
     // Args: dev(1), chan(0), reg(9), count(3), mode(2), options(0), config_addr
     xregn(1, 0, 1, 4, 2, 10, GROUND_CONFIG, 0); // Enable sprite
 
-    printf("Next Free XRAM Address: 0x%04X\n", GROUND_CONFIG + sizeof(vga_mode2_config_t));
+    TEXT_CONFIG = GROUND_CONFIG + sizeof(vga_mode2_config_t);
+    text_message_addr = TEXT_CONFIG + NTEXT * sizeof(vga_mode1_config_t);
+    const unsigned bytes_per_char = 3; // we write 3 bytes per character into text RAM
+    unsigned text_storage_end = text_message_addr + MESSAGE_LENGTH * bytes_per_char;
+
+    for (uint8_t i = 0; i < NTEXT; i++) {
+
+        unsigned ptr = TEXT_CONFIG + i * sizeof(vga_mode1_config_t);
+
+        xram0_struct_set(ptr, vga_mode1_config_t, x_wrap, 0);
+        xram0_struct_set(ptr, vga_mode1_config_t, y_wrap, 0);
+        xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 7); //Bug: first char duplicated if not set to zero
+        xram0_struct_set(ptr, vga_mode1_config_t, y_pos_px, 1);
+        xram0_struct_set(ptr, vga_mode1_config_t, width_chars, MESSAGE_WIDTH);
+        xram0_struct_set(ptr, vga_mode1_config_t, height_chars, MESSAGE_HEIGHT);
+        xram0_struct_set(ptr, vga_mode1_config_t, xram_data_ptr, text_message_addr);
+        xram0_struct_set(ptr, vga_mode1_config_t, xram_palette_ptr, 0xFFFF);
+        xram0_struct_set(ptr, vga_mode1_config_t, xram_font_ptr, 0xFFFF);
+    }
+
+    // 4 parameters: text mode, 8-bit, config, plane
+    xregn(1, 0, 1, 4, 1, 3, TEXT_CONFIG, 2);
+
+    // Clear message buffer to spaces
+    for (int i = 0; i < MESSAGE_LENGTH; ++i) message[i] = ' ';
+
+    // Now write the MESSAGE_LENGTH characters into text RAM (3 bytes per char)
+    RIA.addr0 = text_message_addr;
+    RIA.step0 = 1;
+    for (uint8_t i = 0; i < MESSAGE_LENGTH; i++) {
+        RIA.rw0 = message[i];
+        RIA.rw0 = 0xE0;
+        RIA.rw0 = 0x00;
+    }
+
+    printf("Next Free XRAM Address: 0x%04X\n", text_storage_end);
 
 
     printf("Chopper Data at 0x%04X\n", CHOPPER_DATA);

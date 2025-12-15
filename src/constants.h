@@ -189,4 +189,10 @@ extern unsigned GROUND_MAP_END;
 #define CLIMB_SPEED     (1 << SUBPIXEL_BITS)   // Pixels per frame to rise
 #define DIVE_SPEED      (2 << SUBPIXEL_BITS)   // Pixels per frame to force down
 
+// HUD Text Plane
+#define NTEXT 1
+#define MESSAGE_WIDTH 36
+#define MESSAGE_HEIGHT 2
+#define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT)
+
 #endif // CONSTANTS_H
