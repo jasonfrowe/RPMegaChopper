@@ -5,10 +5,16 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-#define WORLD_SIZE_MAX 4096
 #define WORLD_SIZE_MIN 0
-#define WORLD_OFFSET 3840
+#define WORLD_SIZE_MAX 4096
+#define SCREEN_CENTER_OFFSET ((SCREEN_WIDTH / 2) - 16) // ~144 pixels
 
+// We want to start on the Far Right side of the map
+#define START_WORLD_X       3800 // might go away
+
+#define WORLD_WIDTH_PX      4096L
+#define START_PADDING       256L   // Start 256px from the right wall
+#define CHOPPER_START_POS   (WORLD_WIDTH_PX - START_PADDING) // ~3840
 
 // Vertical Boundaries
 // Screen is 240 pixels tall.

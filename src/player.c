@@ -8,16 +8,16 @@
 #include "constants.h"
 
 
-#define CHOPPER_START_POS ((SCREEN_WIDTH / 2) - 16)  // Start roughly in middle of screen
+#define CHOPPER_START_POS_XL ((SCREEN_WIDTH / 2) - 16)  // Start roughly in middle of screen
 
 // --- CAMERA & WORLD ---
 // camera_x is the World Position of the left edge of the screen
-int32_t camera_x = 0; 
-int32_t chopper_world_x = CHOPPER_START_POS << SUBPIXEL_BITS; // This tracks our world X position
+int32_t chopper_world_x = (int32_t)CHOPPER_START_POS << SUBPIXEL_BITS;
+int32_t camera_x = ((int32_t)CHOPPER_START_POS << SUBPIXEL_BITS) - (144 << SUBPIXEL_BITS);
 
 // Positions are now stored as Sub-Pixels
-int16_t chopper_xl = CHOPPER_START_POS << SUBPIXEL_BITS;  // This tracks our on-screen X position
-int16_t chopper_xr = (CHOPPER_START_POS +16) << SUBPIXEL_BITS; // Right side is 16 pixels to the right
+int16_t chopper_xl = CHOPPER_START_POS_XL << SUBPIXEL_BITS;  // This tracks our on-screen X position
+int16_t chopper_xr = (CHOPPER_START_POS_XL +16) << SUBPIXEL_BITS; // Right side is 16 pixels to the right
 int16_t chopper_y = GROUND_Y_SUB; // (SCREEN_HEIGHT / 2) << SUBPIXEL_BITS;
 
 int16_t chopper_frame = 0; // Current frame index (0-21)
@@ -264,12 +264,23 @@ void update_chopper_state(void) {
     }
 
     // World Boundaries
-    int16_t world_x_pos = ((chopper_world_x + velocity_x) >> SUBPIXEL_BITS) + WORLD_OFFSET;
-    if (world_x_pos < WORLD_SIZE_MIN) {
-        velocity_x = 0; // Prevent moving left out of world
+    // Calculate next potential position
+    int32_t next_world_x = chopper_world_x + velocity_x;
+    int16_t next_pixel_x = next_world_x >> SUBPIXEL_BITS;
+
+    // Check Left Wall (0)
+    if (next_pixel_x < WORLD_SIZE_MIN) {
+        velocity_x = 0; 
+        chopper_world_x = ((int32_t)WORLD_SIZE_MIN << SUBPIXEL_BITS);
     }
-    if (world_x_pos > WORLD_SIZE_MAX) {
-        velocity_x = 0; // Prevent moving right out of world
+    // Check Right Wall (4096)
+    else if (next_pixel_x > WORLD_SIZE_MAX) {
+        velocity_x = 0;
+        chopper_world_x = ((int32_t)WORLD_SIZE_MAX << SUBPIXEL_BITS);
+    }
+    else {
+        // Valid move
+        chopper_world_x += velocity_x;
     }
 
     // -----------------------------------------------------------
@@ -301,7 +312,7 @@ void update_chopper_state(void) {
         camera_x += diff;
     }
 
-    printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x >> SUBPIXEL_BITS, chopper_xl >> SUBPIXEL_BITS);
+    // printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x >> SUBPIXEL_BITS, chopper_xl >> SUBPIXEL_BITS);
 
     // -----------------------------------------------------------
     // 7. UPDATE TO HARDWARE

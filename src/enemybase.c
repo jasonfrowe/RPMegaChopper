@@ -8,10 +8,10 @@
 // World X locations for the 4 bases (Subpixels)
 // Spread them out: 500, 1500, 2500, 3500
 const int32_t ENEMY_BASE_LOCATIONS[NUM_ENEMY_BASES] = {
-    500  << SUBPIXEL_BITS,
-    1500 << SUBPIXEL_BITS,
-    2500 << SUBPIXEL_BITS,
-    3500 << SUBPIXEL_BITS
+    200L  << SUBPIXEL_BITS,
+    1200L << SUBPIXEL_BITS,
+    2200L << SUBPIXEL_BITS,
+    3200L << SUBPIXEL_BITS
 };
 
 void update_enemybase(void) {
