@@ -36,6 +36,33 @@ static void init_graphics(void)
     // Initialize graphics here
     xregn(1, 0, 0, 1, 1); // 320x240 (4:3)
 
+    uint16_t tile_palette[16] = {
+        0x0020,  // Index 0 (Transparent)
+        0x07E0,
+        0xA8E6,
+        0xEB2F,
+        0xFFE0,
+        0xFFFF,
+        0x0020,
+        0x0020,
+        0x0020,
+        0x0020,
+        0x0020,
+        0x0020,
+        0x0020,
+        0x0020,
+        0x0020,
+        0x0020,
+    };
+
+    RIA.addr0 = PALETTE_ADDR;
+    RIA.step0 = 1;
+    for (int i = 0; i < 16; i++) {
+        // Write Low Byte, then High Byte
+        RIA.rw0 = tile_palette[i] & 0xFF;
+        RIA.rw0 = tile_palette[i] >> 8;
+    }
+
     CHOPPER_CONFIG = SPRITE_DATA_END;
     CHOPPER_LEFT_CONFIG  = CHOPPER_CONFIG; // Chopper Left Sprite Configuration
     CHOPPER_RIGHT_CONFIG = CHOPPER_CONFIG + sizeof(vga_mode4_sprite_t); // Chopper Right Sprite Configuration
@@ -219,7 +246,7 @@ static void init_graphics(void)
     xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, width_tiles, 20);
     xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, height_tiles, 15);
     xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, xram_data_ptr, GROUND_MAP_START);
-    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, xram_palette_ptr, 0xFFFF);
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, xram_palette_ptr, PALETTE_ADDR);
     xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, xram_tile_ptr, GROUND_DATA);
 
 

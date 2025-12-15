@@ -101,6 +101,10 @@ extern unsigned GROUND_MAP_START; // Ground Background Configuration
 #define GROUND_MAP_SIZE            0x0258  // 600 bytes
 extern unsigned GROUND_MAP_END;
 
+// PALETTE DATA
+// -------------------------------------------------------------------------
+#define PALETTE_ADDR 0xFF58  // XRAM address for palette data
+
 // 5. Keyboard, Gamepad and Sound
 // -------------------------------------------------------------------------
 #define GAMEPAD_INPUT   0xFF78  // XRAM address for gamepad data
