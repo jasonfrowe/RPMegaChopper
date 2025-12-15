@@ -11,6 +11,7 @@
 #include "flags.h"
 #include "enemybase.h"
 #include "bullets.h"
+#include "hostages.h"
 
 
 unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
@@ -252,6 +253,21 @@ static void init_graphics(void)
 
 }
 
+void init_game_logic(void) {
+    // Reset Hostages
+    for (int i = 0; i < NUM_HOSTAGES; i++) {
+        hostages[i].active = false;
+    }
+
+    // Reset Bases
+    for (int i = 0; i < NUM_ENEMY_BASES; i++) {
+        base_state[i].destroyed = false;
+        base_state[i].hostages_remaining = HOSTAGES_PER_BASE;
+        base_state[i].spawn_timer = 0;
+    }
+}
+
+
 uint8_t anim_timer = 0;
 
 int main(void)
@@ -260,6 +276,7 @@ int main(void)
     puts("Hello from RPMegaChopper");
 
     init_graphics();
+    init_game_logic();
 
     // Enable keyboard input
     xregn(0, 0, 0, 1, KEYBOARD_INPUT);
@@ -304,6 +321,10 @@ int main(void)
         update_enemybase();
         // Update bullets
         update_bullet();
+        // Check bullet collisions
+        check_bullet_collisions();
+        // Update hostages
+        update_hostages();
 
         // Render the game
         // render_game();

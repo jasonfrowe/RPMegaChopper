@@ -92,7 +92,7 @@ extern unsigned HOMEBASE_CONFIG;   // Home Base Sprite Configuration
 extern unsigned ENEMYBASE_CONFIG;  // Enemy Base Sprite Configuration
 extern unsigned FLAGS_CONFIG;      // Flags Sprite Configuration
 extern unsigned BULLET_CONFIG;     // Bullet Sprite Configuration
-
+extern unsigned HOSTAGE_CONFIG;   // Hostage Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------
@@ -184,8 +184,5 @@ extern unsigned GROUND_MAP_END;
 #define GRAVITY_SPEED   8 // (1 << SUBPIXEL_BITS)   // Pixels per frame to fall when idle
 #define CLIMB_SPEED     (1 << SUBPIXEL_BITS)   // Pixels per frame to rise
 #define DIVE_SPEED      (2 << SUBPIXEL_BITS)   // Pixels per frame to force down
-
-// Hostages
-#define NUM_HOSTAGES    16
 
 #endif // CONSTANTS_H

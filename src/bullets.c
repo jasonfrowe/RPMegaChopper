@@ -4,7 +4,9 @@
 #include "constants.h"
 #include "player.h"
 #include "bullets.h"
+#include "enemybase.h"
 #include "input.h"
+#include "hostages.h"
 
 // --- BULLET STATE ---
 bool bullet_active = false;
@@ -111,5 +113,44 @@ void update_bullet(void) {
     } else {
         // Hide
         xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+    }
+}
+
+void check_bullet_collisions(void) {
+    if (!bullet_active) return;
+
+    // Base Width is 64 pixels (Two 32x32 sprites side-by-side)
+    // Hitbox: +/- 32 pixels from center
+    const int32_t HITBOX_HALF_WIDTH = (32 << SUBPIXEL_BITS);
+
+    for (int i = 0; i < NUM_ENEMY_BASES; i++) {
+        // Skip if already destroyed
+        if (base_state[i].destroyed) continue;
+
+        int32_t base_x = ENEMY_BASE_LOCATIONS[i];
+        
+        // Simple 1D collision check (World X)
+        // Check if bullet is within the base width
+        if (bullet_world_x > (base_x - HITBOX_HALF_WIDTH) && 
+            bullet_world_x < (base_x + HITBOX_HALF_WIDTH)) {
+            
+            // Check Y height (Base is ~32px tall)
+            // Bullet Y is screen relative in your code, but stored as absolute Y? 
+            // Assuming bullet_y is World Y (pixels from top of screen):
+            if (bullet_y > (GROUND_Y_SUB - (32<<4))) {
+                
+                // --- HIT! ---
+                base_state[i].destroyed = true;
+                bullet_active = false; // Destroy bullet
+                
+                // Optional: Change base sprite to "Ruined" frame here
+                // For now, we rely on the state variable to start spawning
+                
+                // Hide bullet sprite immediately
+                xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+                
+                return; // Only hit one thing at a time
+            }
+        }
     }
 }
