@@ -61,7 +61,7 @@
 #define HOMEBASE_DATA_SIZE      0x0C00U // Size of Home Base sprite data
 
 #define ENEMYBASE_DATA         (HOMEBASE_DATA + HOMEBASE_DATA_SIZE) // Enemy Base sprite data address
-#define ENEMYBASE_DATA_SIZE     0x1000U // Size of Enemy Base sprite
+#define ENEMYBASE_DATA_SIZE     0x1800U // Size of Enemy Base sprite
 
 #define FLAGS_DATA             (ENEMYBASE_DATA + ENEMYBASE_DATA_SIZE) // Flag sprite data address
 #define FLAGS_DATA_SIZE         0x0400U // Size of Flag sprite data
@@ -72,7 +72,10 @@
 #define BULLET_DATA            (HOSTAGES_DATA + HOSTAGES_DATA_SIZE) // Bullet sprite data address
 #define BULLET_DATA_SIZE        0x0008U // Size of Bullet sprite data
 
-#define SPRITE_DATA_END        (BULLET_DATA + BULLET_DATA_SIZE) // End of used data area
+#define EXPLOSION_DATA         (BULLET_DATA + BULLET_DATA_SIZE) // Explosion sprite data address
+#define EXPLOSION_DATA_SIZE     0x1400U // Size of Explosion sprite data
+
+#define SPRITE_DATA_END        (EXPLOSION_DATA + EXPLOSION_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
@@ -95,6 +98,8 @@ extern unsigned BULLET_CONFIG;     // Bullet Sprite Configuration
 extern unsigned HOSTAGE_CONFIG;   // Hostage Sprite Configuration
 extern unsigned TEXT_CONFIG;      // Text Plane Configuration
 extern unsigned text_message_addr; // Text message address
+extern unsigned EXPLOSION_LEFT_CONFIG; // Explosion Sprite Configuration
+extern unsigned EXPLOSION_RIGHT_CONFIG;// Explosion Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------

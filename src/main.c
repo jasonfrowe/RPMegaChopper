@@ -13,6 +13,7 @@
 #include "bullets.h"
 #include "hostages.h"
 #include "hud.h"
+#include "explosion.h"
 
 
 unsigned CHOPPER_CONFIG;        // Chopper Sprite Configuration
@@ -32,6 +33,8 @@ unsigned BULLET_CONFIG;         // Bullet Sprite Configuration
 unsigned HOSTAGE_CONFIG;        // Hostage Sprite Configuration
 unsigned TEXT_CONFIG;           // Text Plane Configuration
 unsigned text_message_addr;     // Text message address
+unsigned EXPLOSION_LEFT_CONFIG; // Explosion Sprite Configuration
+unsigned EXPLOSION_RIGHT_CONFIG;// Explosion Sprite Configuration
 
 
 static void init_graphics(void)
@@ -47,7 +50,7 @@ static void init_graphics(void)
         0xFFE0,
         0xFFFF,
         0xF4A7,
-        0x0020,
+        0x4620,
         0x0020,
         0x0020,
         0x0020,
@@ -106,10 +109,24 @@ static void init_graphics(void)
     xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, log_size, 1);  // 2x2 sprite (2^1)
     xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS, 2); // Enable sprite
+    // Add in EXPLOSION
+    EXPLOSION_LEFT_CONFIG = BULLET_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(EXPLOSION_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(EXPLOSION_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, -16);
+    xram0_struct_set(EXPLOSION_LEFT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, EXPLOSION_DATA); // Explosion sprite data
+    xram0_struct_set(EXPLOSION_LEFT_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4)
+    xram0_struct_set(EXPLOSION_LEFT_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
+    EXPLOSION_RIGHT_CONFIG = EXPLOSION_LEFT_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(EXPLOSION_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(EXPLOSION_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, -16);
+    xram0_struct_set(EXPLOSION_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (EXPLOSION_DATA + 512)); // Explosion sprite data (right half)
+    xram0_struct_set(EXPLOSION_RIGHT_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4)
+    xram0_struct_set(EXPLOSION_RIGHT_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    unsigned FOREGROUND_SPRITE_END = BULLET_CONFIG + sizeof(vga_mode4_sprite_t);
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = EXPLOSION_RIGHT_CONFIG + sizeof(vga_mode4_sprite_t);
 
 
     // -----------------------------------------------------
@@ -394,6 +411,8 @@ int main(void)
         update_hostages();
         // Update HUD
         update_hud();
+        // Update explosion
+        update_explosion();
 
         // Render the game
         // render_game();

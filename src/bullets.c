@@ -7,6 +7,7 @@
 #include "enemybase.h"
 #include "input.h"
 #include "hostages.h"
+#include "explosion.h"
 
 // --- BULLET STATE ---
 bool bullet_active = false;
@@ -142,9 +143,11 @@ void check_bullet_collisions(void) {
                 // --- HIT! ---
                 base_state[i].destroyed = true;
                 bullet_active = false; // Destroy bullet
-                
-                // Optional: Change base sprite to "Ruined" frame here
-                // For now, we rely on the state variable to start spawning
+
+                // TRIGGER EXPLOSION CENTERED ON BASE
+                // Base is 64px wide. Center is world_x + 32.
+                // Explosion is 32px wide. To center it: (BaseX + 32) - (ExpWidth/2) = BaseX + 16
+                trigger_explosion(base_x + (16 << SUBPIXEL_BITS), GROUND_Y_SUB - (4 << SUBPIXEL_BITS));
                 
                 // Hide bullet sprite immediately
                 xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
