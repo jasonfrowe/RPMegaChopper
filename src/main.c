@@ -281,12 +281,14 @@ static void init_graphics(void)
 }
 
 void init_game_logic(void) {
-    // Reset Hostages
+    hostages_on_board = 0;
+    hostages_rescued_count = 0;
+
     for (int i = 0; i < NUM_HOSTAGES; i++) {
-        hostages[i].active = false;
+        hostages[i].state = H_STATE_INACTIVE;
+        hostages[i].y = GROUND_Y_SUB - (16 << SUBPIXEL_BITS);
     }
 
-    // Reset Bases
     for (int i = 0; i < NUM_ENEMY_BASES; i++) {
         base_state[i].destroyed = false;
         base_state[i].hostages_remaining = HOSTAGES_PER_BASE;

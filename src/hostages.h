@@ -14,17 +14,33 @@ typedef struct {
 
 extern EnemyBase base_state[];
 
+// --- HOSTAGE STATE DEFINITIONS ---
+typedef enum {
+    H_STATE_INACTIVE = 0,
+    H_STATE_WAITING,        // Waiting inside enemy base
+    H_STATE_RUNNING_CHOPPER,// Running towards player
+    H_STATE_BOARDING,       // Entering the door
+    H_STATE_ON_BOARD,       // Safe inside chopper
+    H_STATE_RUNNING_HOME,   // Running to Home Base
+    H_STATE_WAVING,         // Victory wave
+    H_STATE_SAFE,           // Inside Home Base (Score)
+    H_STATE_DYING           // Crushed/Shot
+} HostageState;
+
 typedef struct {
-    bool active;
+    HostageState state;     // Replaces simple 'active' bool logic
     int32_t world_x;
     int16_t y;
-    int8_t direction;       // 1 = Right, -1 = Left, 0 = Idle
-    uint8_t anim_frame;     // Current animation frame index (0-9)
-    uint8_t anim_timer;     // Timer for animation speed
-    uint8_t base_id;        // Which base did they come from?
+    int8_t direction;       // 1 = Right, -1 = Left
+    uint8_t anim_frame;     
+    uint8_t anim_timer;     
+    uint8_t base_id;        
 } Hostage;
 
 extern Hostage hostages[];
+
+extern uint8_t hostages_on_board;
+extern uint8_t hostages_rescued_count;
 
 extern void update_hostages(void);
 
