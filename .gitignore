@@ -14,7 +14,6 @@ Sprites
 *.out
 *.o
 *.elf
-*.bin
 *.hex
 *.map
 *.lst
@@ -35,3 +34,4 @@ Sprites
 *.ear
 *.iml
 .idea/
+.venv
