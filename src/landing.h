@@ -4,7 +4,7 @@
 
 // World X Position of the Landing Pad (in Subpixels)
 // #define LANDING_PAD_WORLD_X   (104 << SUBPIXEL_BITS)
-#define LANDING_PAD_WORLD_X   (3800L << SUBPIXEL_BITS)
+#define LANDING_PAD_WORLD_X   (3900L << SUBPIXEL_BITS)
 
 // Landing Pad
 #define NUM_LANDING_PAD_SPRITE 9

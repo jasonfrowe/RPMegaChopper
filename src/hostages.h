@@ -4,7 +4,7 @@
 // Hostages
 #define NUM_HOSTAGES    16
 #define HOSTAGES_PER_BASE 16
-#define HOSTAGE_RUN_SPEED (1 << SUBPIXEL_BITS) // 1 pixel per frame
+#define HOSTAGE_RUN_SPEED 8 // (1 << SUBPIXEL_BITS) // 1 pixel per frame
 
 typedef struct {
     bool destroyed;

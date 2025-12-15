@@ -10,10 +10,10 @@
 #define SCREEN_CENTER_OFFSET ((SCREEN_WIDTH / 2) - 16) // ~144 pixels
 
 // We want to start on the Far Right side of the map
-#define START_WORLD_X       3800 // might go away
+#define START_WORLD_X       3900 // Will Go away
 
 #define WORLD_WIDTH_PX      4096L
-#define START_PADDING       256L   // Start 256px from the right wall
+#define START_PADDING       156L   // Start 156px from the right wall
 #define CHOPPER_START_POS   (WORLD_WIDTH_PX - START_PADDING) // ~3840
 
 // Vertical Boundaries
@@ -25,9 +25,9 @@
 #define GROUND_Y        186 
 #define GROUND_Y_SUB (GROUND_Y << SUBPIXEL_BITS)
 // Left and Right boundaries can be full width
-#define LEFT_BOUNDARY   (SCREEN_WIDTH / 2 - 80)
+#define LEFT_BOUNDARY   (SCREEN_WIDTH / 2 - 40)
 #define LEFT_BOUNDARY_SUB (LEFT_BOUNDARY << SUBPIXEL_BITS)
-#define RIGHT_BOUNDARY  (SCREEN_WIDTH / 2 + 80 - 32) // 32 = Chopper Width
+#define RIGHT_BOUNDARY  (SCREEN_WIDTH / 2 + 40 - 32) // 32 = Chopper Width
 #define RIGHT_BOUNDARY_SUB (RIGHT_BOUNDARY << SUBPIXEL_BITS)
 
 // Scroll Triggers (in Screen Pixels)

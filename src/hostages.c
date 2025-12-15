@@ -138,14 +138,14 @@ void update_hostages(void) {
             target_x = HOMEBASE_WORLD_X + (24 << SUBPIXEL_BITS);
             move_logic = true;
 
-            // Reached Door?
-            if (labs(target_x - hostages[i].world_x) < (4 << SUBPIXEL_BITS)) {
+            // FIX: Increase threshold to 6 to ensure overlap with movement logic
+            if (labs(target_x - hostages[i].world_x) < (6 << SUBPIXEL_BITS)) {
+                
                 if (hostages[i].base_id == 99) {
-                    // Start Waving
                     hostages[i].state = H_STATE_WAVING;
-                    hostages[i].anim_timer = 0;
+                    hostages[i].anim_timer = 0; 
                 } else {
-                    // Safe! Recycle Slot Immediately
+                    // Safe! Recycle Slot
                     hostages_rescued_count++;
                     hostages[i].state = H_STATE_INACTIVE; 
                     xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);

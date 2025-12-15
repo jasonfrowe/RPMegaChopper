@@ -5,7 +5,7 @@
 #define NUM_HOMEBASE_SPRITE    6
 
 // Place it at World X = 600 (Right after the landing pad)
-#define HOMEBASE_WORLD_X    (3872L << SUBPIXEL_BITS)
+#define HOMEBASE_WORLD_X    (3972L << SUBPIXEL_BITS)
 
 // ============================================================================
 // HOMEBASE MODULE
