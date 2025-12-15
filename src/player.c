@@ -264,7 +264,7 @@ void update_chopper_state(void) {
     }
 
     // World Boundaries
-    int16_t world_x_pos = (chopper_world_x + velocity_x) >> SUBPIXEL_BITS;
+    int16_t world_x_pos = ((chopper_world_x + velocity_x) >> SUBPIXEL_BITS) + WORLD_OFFSET;
     if (world_x_pos < WORLD_SIZE_MIN) {
         velocity_x = 0; // Prevent moving left out of world
     }
@@ -301,7 +301,7 @@ void update_chopper_state(void) {
         camera_x += diff;
     }
 
-    // printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x >> SUBPIXEL_BITS, chopper_xl >> SUBPIXEL_BITS);
+    printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x >> SUBPIXEL_BITS, chopper_xl >> SUBPIXEL_BITS);
 
     // -----------------------------------------------------------
     // 7. UPDATE TO HARDWARE
@@ -330,6 +330,6 @@ void update_chopper_state(void) {
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
 
 
-    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_pos_px, -(camera_x >> SUBPIXEL_BITS));
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_pos_px, -((camera_x/2) >> SUBPIXEL_BITS));
 
 }

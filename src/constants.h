@@ -5,8 +5,9 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-#define WORLD_SIZE_MAX 250
-#define WORLD_SIZE_MIN -4096
+#define WORLD_SIZE_MAX 4096
+#define WORLD_SIZE_MIN 0
+#define WORLD_OFFSET 3840
 
 
 // Vertical Boundaries
@@ -176,9 +177,6 @@ extern unsigned GROUND_MAP_END;
 
 // Hostages
 #define NUM_HOSTAGES    16
-
-// Enemy Base
-#define NUM_ENEMYBASE_SPRITE   2
 
 
 #endif // CONSTANTS_H

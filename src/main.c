@@ -9,6 +9,7 @@
 #include "landing.h"
 #include "homebase.h"
 #include "flags.h"
+#include "enemybase.h"
 
 
 unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
@@ -287,6 +288,8 @@ int main(void)
         update_homebase();
         // Update flags
         update_flags();
+        // Update enemy base
+        update_enemybase();
 
         // Render the game
         // render_game();
