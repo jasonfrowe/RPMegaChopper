@@ -43,7 +43,7 @@ static void init_graphics(void)
         0xEB2F,
         0xFFE0,
         0xFFFF,
-        0x0020,
+        0xF4A7,
         0x0020,
         0x0020,
         0x0020,
