@@ -15,7 +15,7 @@ void update_hud(void) {
     // 1. Format the string
     // Pad with spaces to clear old numbers. 
     // Format: "LOST: 00  LOAD: 00  SAFE: 00      "
-    sprintf(hud_buffer, " LOST:%02d  LOAD:%02d  SAFE:%02d     ", 
+    sprintf(hud_buffer, "     LOST:%02d  LOAD:%02d  SAFE:%02d  ", 
             hostages_lost_count, 
             hostages_on_board, 
             hostages_rescued_count);
@@ -33,12 +33,4 @@ void update_hud(void) {
         RIA.rw0 = 0xFF; // Foreground Color (White/Index 255)
         RIA.rw0 = 0x00; // Background Color (Transparent/Index 0)
     }
-
-    // RIA.addr0 = text_message_addr;
-    // RIA.step0 = 1;
-    // for (uint8_t i = 0; i < MESSAGE_LENGTH; i++) {
-    //     RIA.rw0 = message[i];
-    //     RIA.rw0 = 0xE0;
-    //     RIA.rw0 = 0x00;
-    // }
 }
