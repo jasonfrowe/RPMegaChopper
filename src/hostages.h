@@ -41,6 +41,7 @@ extern Hostage hostages[];
 
 extern uint8_t hostages_on_board;
 extern uint8_t hostages_rescued_count;
+extern uint8_t hostages_lost_count;
 
 extern void update_hostages(void);
 

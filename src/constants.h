@@ -93,6 +93,8 @@ extern unsigned ENEMYBASE_CONFIG;  // Enemy Base Sprite Configuration
 extern unsigned FLAGS_CONFIG;      // Flags Sprite Configuration
 extern unsigned BULLET_CONFIG;     // Bullet Sprite Configuration
 extern unsigned HOSTAGE_CONFIG;   // Hostage Sprite Configuration
+extern unsigned TEXT_CONFIG;      // Text Plane Configuration
+extern unsigned text_message_addr; // Text message address
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------

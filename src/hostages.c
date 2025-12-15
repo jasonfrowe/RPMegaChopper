@@ -16,6 +16,9 @@ uint8_t hostages_on_board = 0;
 uint8_t hostages_rescued_count = 0;
 uint8_t dropoff_timer = 0;
 
+// Game stats
+uint8_t hostages_lost_count = 0;
+
 // Constants
 #define SAFE_DOOR_DIST      (6 << SUBPIXEL_BITS)  // +/- 6 pixels from center is safe
 #define CHOPPER_WIDTH_SUB   (32 << SUBPIXEL_BITS) 
@@ -109,6 +112,7 @@ void update_hostages(void) {
 
         // Handle Dying (Recycle Slot immediately)
         if (hostages[i].state == H_STATE_DYING) {
+            hostages_lost_count++; // Increment lost counter
             hostages[i].state = H_STATE_INACTIVE;
             xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
             continue;

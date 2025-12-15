@@ -392,6 +392,8 @@ int main(void)
         check_bullet_collisions();
         // Update hostages
         update_hostages();
+        // Update HUD
+        update_hud();
 
         // Render the game
         // render_game();
