@@ -69,7 +69,10 @@
 #define HOSTAGES_DATA           (FLAGS_DATA + FLAGS_DATA_SIZE) // Hostages sprite data address
 #define HOSTAGES_DATA_SIZE      0x1400U // Size of Hostages sprite data
 
-#define SPRITE_DATA_END        (HOSTAGES_DATA + HOSTAGES_DATA_SIZE) // End of used data area
+#define BULLET_DATA            (HOSTAGES_DATA + HOSTAGES_DATA_SIZE) // Bullet sprite data address
+#define BULLET_DATA_SIZE        0x0008U // Size of Bullet sprite data
+
+#define SPRITE_DATA_END        (BULLET_DATA + BULLET_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
@@ -88,6 +91,7 @@ extern unsigned LANDINGPAD_CONFIG; // Landing Pad Sprite Configuration
 extern unsigned HOMEBASE_CONFIG;   // Home Base Sprite Configuration
 extern unsigned ENEMYBASE_CONFIG;  // Enemy Base Sprite Configuration
 extern unsigned FLAGS_CONFIG;      // Flags Sprite Configuration
+extern unsigned BULLET_CONFIG;     // Bullet Sprite Configuration
 
 
 // 4. TILE MAP CONFIGURATION
@@ -183,6 +187,5 @@ extern unsigned GROUND_MAP_END;
 
 // Hostages
 #define NUM_HOSTAGES    16
-
 
 #endif // CONSTANTS_H

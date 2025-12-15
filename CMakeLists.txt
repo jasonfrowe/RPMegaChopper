@@ -18,6 +18,7 @@ rp6502_asset(RPMegaChopper 0x18100 images/HomeBase.bin)
 rp6502_asset(RPMegaChopper 0x18D00 images/EnemyBase.bin)
 rp6502_asset(RPMegaChopper 0x19D00 images/Flags.bin)
 rp6502_asset(RPMegaChopper 0x1A100 images/Hostages.bin)
+rp6502_asset(RPMegaChopper 0x1B500 images/bullet.bin)
 rp6502_executable(RPMegaChopper
     Chopper.bin.rp6502
     Tiles_Ground.bin.rp6502
@@ -29,6 +30,7 @@ rp6502_executable(RPMegaChopper
     EnemyBase.bin.rp6502
     Flags.bin.rp6502
     Hostages.bin.rp6502
+    bullet.bin.rp6502
     DATA file
     RESET file
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.hlp
@@ -42,4 +44,5 @@ target_sources(RPMegaChopper PRIVATE
     src/homebase.c
     src/flags.c
     src/enemybase.c
+    src/bullets.c
 )

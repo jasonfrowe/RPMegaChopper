@@ -22,12 +22,6 @@ int16_t chopper_y = GROUND_Y_SUB; // (SCREEN_HEIGHT / 2) << SUBPIXEL_BITS;
 
 int16_t chopper_frame = 0; // Current frame index (0-21)
 
-typedef enum {
-    FACING_LEFT = -1,
-    FACING_CENTER = 0,
-    FACING_RIGHT = 1
-} ChopperHeading;
-
 // Global State Variables
 ChopperHeading current_heading = FACING_LEFT;
 int8_t  turn_timer = 0;       // Counts how long we hold a direction to turn
@@ -67,8 +61,10 @@ void update_chopper_animation(uint8_t frame)
 
 extern uint8_t anim_timer;
 
+uint8_t base_frame = FRAME_CENTER_IDLE;
+bool is_landed = true;
+
 void update_chopper_state(void) {
-    uint8_t base_frame = FRAME_CENTER_IDLE;
     
     // -----------------------------------------------------------
     // 1. UPDATE BLADE ANIMATION (0 or 1)
@@ -130,7 +126,7 @@ void update_chopper_state(void) {
     // -----------------------------------------------------------
 
     // Helper: Are we currently touching the ground?
-    bool is_landed = (chopper_y >= GROUND_Y_SUB);
+    is_landed = (chopper_y >= GROUND_Y_SUB);
 
     if (is_turning) {
         // --- TURNING LOGIC ---

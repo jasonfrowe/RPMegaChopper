@@ -10,6 +10,7 @@
 #include "homebase.h"
 #include "flags.h"
 #include "enemybase.h"
+#include "bullets.h"
 
 
 unsigned CHOPPER_CONFIG; // Chopper Sprite Configuration
@@ -25,6 +26,8 @@ unsigned LANDINGPAD_CONFIG; // Landing Pad Sprite Configuration
 unsigned HOMEBASE_CONFIG;   // Home Base Sprite Configuration
 unsigned ENEMYBASE_CONFIG;  // Enemy Base Sprite Configuration
 unsigned FLAGS_CONFIG;      // Flags Sprite Configuration
+unsigned BULLET_CONFIG;     // Bullet Sprite Configuration
+unsigned HOSTAGE_CONFIG;   // Hostage Sprite Configuration
 
 
 static void init_graphics(void)
@@ -54,8 +57,9 @@ static void init_graphics(void)
 
 
     // Add in HOSTAGES
+    HOSTAGE_CONFIG = CHOPPER_RIGHT_CONFIG + sizeof(vga_mode4_sprite_t);
     for (int i = 0; i < NUM_HOSTAGES; i++) {
-        unsigned hostage_cfg = CHOPPER_RIGHT_CONFIG + sizeof(vga_mode4_sprite_t) + (i * sizeof(vga_mode4_sprite_t));
+        unsigned hostage_cfg = HOSTAGE_CONFIG + (i * sizeof(vga_mode4_sprite_t));
         xram0_struct_set(hostage_cfg, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
         xram0_struct_set(hostage_cfg, vga_mode4_sprite_t, y_pos_px, -16);
         xram0_struct_set(hostage_cfg, vga_mode4_sprite_t, xram_sprite_ptr, HOSTAGES_DATA); // Each hostage is 16x16 (512 bytes)
@@ -63,10 +67,18 @@ static void init_graphics(void)
         xram0_struct_set(hostage_cfg, vga_mode4_sprite_t, has_opacity_metadata, false);
     }
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES, 2); // Enable sprite
+    // Add in BULLET
+    BULLET_CONFIG = HOSTAGE_CONFIG + (NUM_HOSTAGES * sizeof(vga_mode4_sprite_t));
+    xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, x_pos_px, -8); // Off-screen initially
+    xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -8);
+    xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BULLET_DATA); // Bullet sprite data
+    xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, log_size, 1);  // 2x2 sprite (2^1)
+    xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS, 2); // Enable sprite
 
 
-    unsigned FOREGROUND_SPRITE_END = CHOPPER_LEFT_CONFIG + 2 * sizeof(vga_mode4_sprite_t) + (NUM_HOSTAGES * sizeof(vga_mode4_sprite_t));
+    unsigned FOREGROUND_SPRITE_END = BULLET_CONFIG + sizeof(vga_mode4_sprite_t);
 
 
     // -----------------------------------------------------
@@ -290,6 +302,8 @@ int main(void)
         update_flags();
         // Update enemy base
         update_enemybase();
+        // Update bullets
+        update_bullet();
 
         // Render the game
         // render_game();
