@@ -7,6 +7,7 @@
 #include "hostages.h"
 #include "enemybase.h"
 #include "homebase.h"
+#include "smallexplosion.h"
 
 
 Hostage hostages[NUM_HOSTAGES];
@@ -32,6 +33,15 @@ uint16_t get_hostage_ptr(int frame_idx) {
 }
 
 void update_hostages(void) {
+
+    // --- 1. PRE-CALCULATE CHOPPER STATE ---
+    bool is_chopper_landed = (chopper_y >= GROUND_Y_SUB);
+    
+    // "Low Altitude" means the chopper body overlaps the hostage height
+    // Chopper is ~16px high. If it's within 12px of the ground, it's dangerous.
+    bool is_chopper_low = (chopper_y > (GROUND_Y_SUB - (12 << SUBPIXEL_BITS)));
+
+    int32_t chopper_center_x = chopper_world_x + (16 << SUBPIXEL_BITS);
     
     // =========================================================
     // 1. SPAWN LOGIC (Enemy Bases)
@@ -123,6 +133,24 @@ void update_hostages(void) {
             hostages[i].state = H_STATE_INACTIVE;
             xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
             continue;
+        }
+
+        // --- CRUSH CHECK (SQUISH) ---
+        // Conditions:
+        // 1. Hostage is vulnerable (Running/Waiting)
+        // 2. Chopper is LOW (Touching ground or hovering slightly above)
+        // 3. Chopper is NOT LANDED (Moving, taking off, or landing)
+        // 4. Hostage is UNDER the chopper body (+/- 14px from center)
+        if (is_chopper_low && !is_chopper_landed) {
+            int32_t dist = labs(chopper_center_x - hostages[i].world_x);
+            if (dist < (14 << SUBPIXEL_BITS)) {
+                // SQUISH!
+                hostages[i].state = H_STATE_DYING;
+                
+                // Visual Effect: Spawn small explosion at hostage position
+                spawn_small_explosion(hostages[i].world_x + (8 << SUBPIXEL_BITS), hostages[i].y + (12 << SUBPIXEL_BITS));
+                continue; // Stop processing this hostage
+            }
         }
 
         int32_t target_x = hostages[i].world_x;
