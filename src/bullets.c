@@ -9,6 +9,7 @@
 #include "hostages.h"
 #include "explosion.h"
 #include "smallexplosion.h"
+#include <stdlib.h>
 
 // --- BULLET STATE ---
 bool bullet_active = false;
@@ -124,6 +125,9 @@ void update_bullet(void) {
 void check_bullet_collisions(void) {
     if (!bullet_active) return;
 
+    // -----------------------------------------------------------
+    // CHECK ENEMY BASES
+    // -----------------------------------------------------------
     for (int i = 0; i < NUM_ENEMY_BASES; i++) {
         // Skip if already destroyed
         if (base_state[i].destroyed) continue;
@@ -164,6 +168,44 @@ void check_bullet_collisions(void) {
                 xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
                 
                 return; // Only hit one thing at a time
+            }
+        }
+    }
+
+    // -----------------------------------------------------------
+    // CHECK HOSTAGES (Friendly Fire)
+    // -----------------------------------------------------------
+    // Hitbox: +/- 5 pixels width, +/- 7 pixels height
+    const int32_t MAN_HALF_W = (5 << SUBPIXEL_BITS);
+    const int32_t MAN_HALF_H = (7 << SUBPIXEL_BITS);
+
+    for (int i = 0; i < NUM_HOSTAGES; i++) {
+        // Only check vulnerable hostages
+        if (hostages[i].state == H_STATE_RUNNING_CHOPPER || 
+            hostages[i].state == H_STATE_RUNNING_HOME || 
+            hostages[i].state == H_STATE_WAVING) {
+
+            // Calculate Hostage Center
+            // World X is top-left. Center is +8.
+            int32_t h_center_x = hostages[i].world_x + (8 << SUBPIXEL_BITS);
+            int32_t h_center_y = hostages[i].y + (8 << SUBPIXEL_BITS); 
+
+            // Check X Distance
+            if (labs(bullet_world_x - h_center_x) < MAN_HALF_W) {
+                // Check Y Distance
+                if (labs(bullet_y - h_center_y) < MAN_HALF_H) {
+                    
+                    // --- HOSTAGE HIT! ---
+                    hostages[i].state = H_STATE_DYING;
+                    
+                    // Visuals
+                    spawn_small_explosion(hostages[i].world_x + (8 << SUBPIXEL_BITS), hostages[i].y + (12 << SUBPIXEL_BITS));
+                    
+                    // Destroy Bullet
+                    bullet_active = false;
+                    xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+                    return;
+                }
             }
         }
     }
