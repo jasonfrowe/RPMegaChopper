@@ -11,7 +11,7 @@ Tank tanks[NUM_TANKS];
 
 // Initial Spawn Locations (Example)
 const int32_t TANK_SPAWNS[NUM_TANKS] = {
-    1000L << SUBPIXEL_BITS,
+    2000L << SUBPIXEL_BITS,
     3000L << SUBPIXEL_BITS
 };
 
