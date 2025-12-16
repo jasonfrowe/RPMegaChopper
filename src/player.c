@@ -95,7 +95,7 @@ void update_chopper_state(void) {
     // 2. INPUT HANDLING (BUTTON 2)
     // -----------------------------------------------------------
     // Only accept input if we aren't already turning
-    if (input_btn2 && !btn2_last_state && !is_turning) {
+    if (input_btn2 && !btn2_last_state && !is_turning && !is_landed) {
         
         // Calculate the Target Heading
         if (current_heading == FACING_LEFT) {
