@@ -78,7 +78,10 @@
 #define SMALL_EXPLOSION_DATA     (EXPLOSION_DATA + EXPLOSION_DATA_SIZE) // Small Explosion sprite data address
 #define SMALL_EXPLOSION_DATA_SIZE 0x0700U // Size of Small Explosion sprite
 
-#define SPRITE_DATA_END        (SMALL_EXPLOSION_DATA + SMALL_EXPLOSION_DATA_SIZE) // End of used data area
+#define TANK_DATA              (SMALL_EXPLOSION_DATA + SMALL_EXPLOSION_DATA_SIZE) // Tank sprite data address
+#define TANK_DATA_SIZE          0x1600U // Size of Tank sprite data
+
+#define SPRITE_DATA_END        (TANK_DATA + TANK_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
@@ -104,6 +107,7 @@ extern unsigned text_message_addr; // Text message address
 extern unsigned EXPLOSION_LEFT_CONFIG; // Explosion Sprite Configuration
 extern unsigned EXPLOSION_RIGHT_CONFIG;// Explosion Sprite Configuration
 extern unsigned SMALL_EXPLOSION_CONFIG; // Small Explosion Sprite Configuration
+extern unsigned TANK_CONFIG; // Tank Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------

@@ -15,6 +15,7 @@
 #include "hud.h"
 #include "explosion.h"
 #include "smallexplosion.h"
+#include "tanks.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -37,6 +38,7 @@ unsigned text_message_addr;         // Text message address
 unsigned EXPLOSION_LEFT_CONFIG;     // Explosion Sprite Configuration
 unsigned EXPLOSION_RIGHT_CONFIG;    // Explosion Sprite Configuration
 unsigned SMALL_EXPLOSION_CONFIG;    // Small Explosion Sprite Configuration
+unsigned TANK_CONFIG;               // Tank Sprite Configuration
 
 
 static void init_graphics(void)
@@ -136,9 +138,34 @@ static void init_graphics(void)
         xram0_struct_set(ptr, vga_mode4_sprite_t, has_opacity_metadata, false);
     }
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS, 2); // Enable sprites
+    TANK_CONFIG = SMALL_EXPLOSION_CONFIG + (MAX_EXPLOSIONS * sizeof(vga_mode4_sprite_t));
+   
+     // Configure all Tank Sprites
+    int total_tank_sprites = NUM_TANKS * SPRITES_PER_TANK; // 18
+    
+    for (int i = 0; i < total_tank_sprites; i++) {
+        unsigned cfg = TANK_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+        
+        xram0_struct_set(cfg, vga_mode4_sprite_t, x_pos_px, -TANK_WIDTH_PX); // Off-screen initially
+        xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -TANK_HEIGHT_PX);
+        // Each tank sprite is 8x8 (128 bytes)
+        xram0_struct_set(cfg, vga_mode4_sprite_t, xram_sprite_ptr, (TANK_DATA + (i * 128)));
+        xram0_struct_set(cfg, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3)
+        xram0_struct_set(cfg, vga_mode4_sprite_t, has_opacity_metadata, false);
+    }
 
-    unsigned FOREGROUND_SPRITE_END = SMALL_EXPLOSION_CONFIG + (MAX_EXPLOSIONS * sizeof(vga_mode4_sprite_t));
+    // Initialize Logical State
+    for (int t = 0; t < NUM_TANKS; t++) {
+        tanks[t].active = true;
+        tanks[t].world_x = TANK_SPAWNS[t];
+        tanks[t].y = GROUND_Y_SUB + (32 << SUBPIXEL_BITS); // Sit on ground
+        tanks[t].direction = -1; // Move Left initially
+        tanks[t].health = 3;
+    }
+
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = TANK_CONFIG + (total_tank_sprites * sizeof(vga_mode4_sprite_t));
 
 
     // -----------------------------------------------------
@@ -427,6 +454,8 @@ int main(void)
         update_explosion();
         // Update small explosion
         update_small_explosions();
+        // Update tanks
+        update_tanks();
 
         // Render the game
         // render_game();
