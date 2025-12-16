@@ -14,27 +14,29 @@
 #include "hostages.h"
 #include "hud.h"
 #include "explosion.h"
+#include "smallexplosion.h"
 
 
-unsigned CHOPPER_CONFIG;        // Chopper Sprite Configuration
-unsigned CHOPPER_LEFT_CONFIG;   // Chopper Left Sprite Configuration
-unsigned CHOPPER_RIGHT_CONFIG;  // Chopper Right Sprite Configuration
-unsigned GROUND_CONFIG;         // Ground Background Configuration
-unsigned GROUND_MAP_START;      // Ground Background Configuration
+unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
+unsigned CHOPPER_LEFT_CONFIG;       // Chopper Left Sprite Configuration
+unsigned CHOPPER_RIGHT_CONFIG;      // Chopper Right Sprite Configuration
+unsigned GROUND_CONFIG;             // Ground Background Configuration
+unsigned GROUND_MAP_START;          // Ground Background Configuration
 unsigned GROUND_MAP_END;
-unsigned CLOUD_A_CONFIG;        // Cloud A Sprite Configuration
-unsigned CLOUD_B_CONFIG;        // Cloud B Sprite Configuration
-unsigned CLOUD_C_CONFIG;        // Cloud C Sprite Configuration
-unsigned LANDINGPAD_CONFIG;     // Landing Pad Sprite Configuration
-unsigned HOMEBASE_CONFIG;       // Home Base Sprite Configuration
-unsigned ENEMYBASE_CONFIG;      // Enemy Base Sprite Configuration
-unsigned FLAGS_CONFIG;          // Flags Sprite Configuration
-unsigned BULLET_CONFIG;         // Bullet Sprite Configuration
-unsigned HOSTAGE_CONFIG;        // Hostage Sprite Configuration
-unsigned TEXT_CONFIG;           // Text Plane Configuration
-unsigned text_message_addr;     // Text message address
-unsigned EXPLOSION_LEFT_CONFIG; // Explosion Sprite Configuration
-unsigned EXPLOSION_RIGHT_CONFIG;// Explosion Sprite Configuration
+unsigned CLOUD_A_CONFIG;            // Cloud A Sprite Configuration
+unsigned CLOUD_B_CONFIG;            // Cloud B Sprite Configuration
+unsigned CLOUD_C_CONFIG;            // Cloud C Sprite Configuration
+unsigned LANDINGPAD_CONFIG;         // Landing Pad Sprite Configuration
+unsigned HOMEBASE_CONFIG;           // Home Base Sprite Configuration
+unsigned ENEMYBASE_CONFIG;          // Enemy Base Sprite Configuration
+unsigned FLAGS_CONFIG;              // Flags Sprite Configuration
+unsigned BULLET_CONFIG;             // Bullet Sprite Configuration
+unsigned HOSTAGE_CONFIG;            // Hostage Sprite Configuration
+unsigned TEXT_CONFIG;               // Text Plane Configuration
+unsigned text_message_addr;         // Text message address
+unsigned EXPLOSION_LEFT_CONFIG;     // Explosion Sprite Configuration
+unsigned EXPLOSION_RIGHT_CONFIG;    // Explosion Sprite Configuration
+unsigned SMALL_EXPLOSION_CONFIG;    // Small Explosion Sprite Configuration
 
 
 static void init_graphics(void)
@@ -124,9 +126,19 @@ static void init_graphics(void)
     xram0_struct_set(EXPLOSION_RIGHT_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4)
     xram0_struct_set(EXPLOSION_RIGHT_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2, 2); // Enable sprites
+    SMALL_EXPLOSION_CONFIG = EXPLOSION_RIGHT_CONFIG + sizeof(vga_mode4_sprite_t);
+    for (uint8_t i = 0; i < MAX_EXPLOSIONS; i++) {
+        unsigned ptr = SMALL_EXPLOSION_CONFIG + i * sizeof(vga_mode4_sprite_t);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -8); // Off-screen initially
+        xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -8);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, xram_sprite_ptr, SMALL_EXPLOSION_DATA);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3)
+        xram0_struct_set(ptr, vga_mode4_sprite_t, has_opacity_metadata, false);
+    }
 
-    unsigned FOREGROUND_SPRITE_END = EXPLOSION_RIGHT_CONFIG + sizeof(vga_mode4_sprite_t);
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = SMALL_EXPLOSION_CONFIG + (MAX_EXPLOSIONS * sizeof(vga_mode4_sprite_t));
 
 
     // -----------------------------------------------------
@@ -413,6 +425,8 @@ int main(void)
         update_hud();
         // Update explosion
         update_explosion();
+        // Update small explosion
+        update_small_explosions();
 
         // Render the game
         // render_game();

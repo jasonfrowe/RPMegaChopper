@@ -20,6 +20,7 @@ rp6502_asset(RPMegaChopper 0x1A500 images/Flags.bin)
 rp6502_asset(RPMegaChopper 0x1A900 images/Hostages.bin)
 rp6502_asset(RPMegaChopper 0x1BD00 images/bullet.bin)
 rp6502_asset(RPMegaChopper 0x1BD08 images/Explosion.bin)
+rp6502_asset(RPMegaChopper 0x1D108 images/SmallExplode.bin)
 rp6502_executable(RPMegaChopper
     Chopper.bin.rp6502
     Tiles_Ground.bin.rp6502
@@ -33,6 +34,7 @@ rp6502_executable(RPMegaChopper
     Hostages.bin.rp6502
     bullet.bin.rp6502
     Explosion.bin.rp6502
+    SmallExplode.bin.rp6502
     DATA file
     RESET file
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.hlp
@@ -50,4 +52,5 @@ target_sources(RPMegaChopper PRIVATE
     src/hostages.c
     src/hud.c
     src/explosion.c
+    src/smallexplosion.c
 )

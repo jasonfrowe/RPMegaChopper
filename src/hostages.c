@@ -51,7 +51,7 @@ void update_hostages(void) {
                         base_state[i].spawn_timer = 0;
                         hostages[h].state = H_STATE_RUNNING_CHOPPER;
                         hostages[h].base_id = i;
-                        hostages[h].world_x = ENEMY_BASE_LOCATIONS[i];
+                        hostages[h].world_x = ENEMY_BASE_LOCATIONS[i] + (13 << SUBPIXEL_BITS);
                         hostages[h].y = GROUND_Y_SUB + (4 << SUBPIXEL_BITS);
                         hostages[h].anim_frame = 8;
                         hostages[h].direction = 0;
@@ -71,10 +71,17 @@ void update_hostages(void) {
     // 2. UNLOAD LOGIC (At Home Base)
     // =========================================================
     bool at_home_base = false;
+    
+    // Check if Landed
     if (chopper_y >= GROUND_Y_SUB) {
-        int32_t home_x_sub = (int32_t)CHOPPER_START_POS << SUBPIXEL_BITS;
-        int32_t dist_home = labs(chopper_world_x - home_x_sub);
-        if (dist_home < (48 << SUBPIXEL_BITS)) {
+        
+        // Define the narrow landing zone (3920 to 3945)
+        // Use 'L' to ensure 32-bit math avoids overflow
+        int32_t zone_min = 3920L << SUBPIXEL_BITS;
+        int32_t zone_max = 3945L << SUBPIXEL_BITS;
+
+        // Check if Chopper X is inside the zone
+        if (chopper_world_x >= zone_min && chopper_world_x <= zone_max) {
             at_home_base = true;
         }
     }

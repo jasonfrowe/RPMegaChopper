@@ -308,7 +308,7 @@ void update_chopper_state(void) {
         camera_x += diff;
     }
 
-    // printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x >> SUBPIXEL_BITS, chopper_xl >> SUBPIXEL_BITS);
+    // printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x, chopper_xl >> SUBPIXEL_BITS);
 
     // -----------------------------------------------------------
     // 7. UPDATE TO HARDWARE

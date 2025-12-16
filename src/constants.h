@@ -75,7 +75,10 @@
 #define EXPLOSION_DATA         (BULLET_DATA + BULLET_DATA_SIZE) // Explosion sprite data address
 #define EXPLOSION_DATA_SIZE     0x1400U // Size of Explosion sprite data
 
-#define SPRITE_DATA_END        (EXPLOSION_DATA + EXPLOSION_DATA_SIZE) // End of used data area
+#define SMALL_EXPLOSION_DATA     (EXPLOSION_DATA + EXPLOSION_DATA_SIZE) // Small Explosion sprite data address
+#define SMALL_EXPLOSION_DATA_SIZE 0x0700U // Size of Small Explosion sprite
+
+#define SPRITE_DATA_END        (SMALL_EXPLOSION_DATA + SMALL_EXPLOSION_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
@@ -100,6 +103,7 @@ extern unsigned TEXT_CONFIG;      // Text Plane Configuration
 extern unsigned text_message_addr; // Text message address
 extern unsigned EXPLOSION_LEFT_CONFIG; // Explosion Sprite Configuration
 extern unsigned EXPLOSION_RIGHT_CONFIG;// Explosion Sprite Configuration
+extern unsigned SMALL_EXPLOSION_CONFIG; // Small Explosion Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------
@@ -201,5 +205,6 @@ extern unsigned GROUND_MAP_END;
 #define MESSAGE_WIDTH 36
 #define MESSAGE_HEIGHT 2
 #define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT)
+
 
 #endif // CONSTANTS_H
