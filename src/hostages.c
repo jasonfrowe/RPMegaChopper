@@ -25,6 +25,8 @@ uint8_t hostages_lost_count = 0;
 #define CHOPPER_WIDTH_SUB   (32 << SUBPIXEL_BITS) 
 #define CRUSH_WIDTH_SUB     (28 << SUBPIXEL_BITS) // Slightly narrower than full width
 
+#define SIGHT_HEIGHT ((GROUND_Y_SUB - (64<<SUBPIXEL_BITS)))
+
 EnemyBase base_state[NUM_ENEMY_BASES]; // We track state for the 4 bases
 
 // Helper to get sprite data offset
@@ -131,7 +133,7 @@ void update_hostages(void) {
             int32_t dist_to_chopper = labs(chopper_center_x - hostages[i].world_x);
             
             // Check if Chopper is visible (Landed/Low AND Close)
-            bool can_see = (chopper_y >= (GROUND_Y_SUB - (32<<4))) && (dist_to_chopper < SIGHT_RANGE);
+            bool can_see = (chopper_y >= SIGHT_HEIGHT) && (dist_to_chopper < SIGHT_RANGE);
 
             if (can_see) {
                 // Run to Chopper

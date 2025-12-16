@@ -21,7 +21,7 @@ rp6502_asset(RPMegaChopper 0x1A900 images/Hostages.bin)
 rp6502_asset(RPMegaChopper 0x1BD00 images/bullet.bin)
 rp6502_asset(RPMegaChopper 0x1BD08 images/Explosion.bin)
 rp6502_asset(RPMegaChopper 0x1D108 images/SmallExplode.bin)
-rp6502_asset(RPMegaChopper 0x1D808 images/Tank.bin)
+rp6502_asset(RPMegaChopper 0x1D488 images/Tank.bin)
 rp6502_executable(RPMegaChopper
     Chopper.bin.rp6502
     Tiles_Ground.bin.rp6502
@@ -56,4 +56,5 @@ target_sources(RPMegaChopper PRIVATE
     src/explosion.c
     src/smallexplosion.c
     src/tanks.c
+    src/ebullets.c
 )

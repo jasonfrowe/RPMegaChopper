@@ -16,6 +16,7 @@
 #include "explosion.h"
 #include "smallexplosion.h"
 #include "tanks.h"
+#include "ebullets.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -465,6 +466,8 @@ int main(void)
         update_bullet();
         // Check bullet collisions
         check_bullet_collisions();
+        // Update enemy bullets
+        update_tank_bullets();
         // Update hostages
         update_hostages();
         // Update HUD

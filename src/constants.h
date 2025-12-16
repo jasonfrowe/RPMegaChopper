@@ -78,10 +78,10 @@
 #define EXPLOSION_DATA_SIZE     0x1400U // Size of Explosion sprite data
 
 #define SMALL_EXPLOSION_DATA     (EXPLOSION_DATA + EXPLOSION_DATA_SIZE) // Small Explosion sprite data address
-#define SMALL_EXPLOSION_DATA_SIZE 0x0700U // Size of Small Explosion sprite
+#define SMALL_EXPLOSION_DATA_SIZE 0x0380U // Size of Small Explosion sprite
 
 #define TANK_DATA              (SMALL_EXPLOSION_DATA + SMALL_EXPLOSION_DATA_SIZE) // Tank sprite data address
-#define TANK_DATA_SIZE          0x1600U // Size of Tank sprite data
+#define TANK_DATA_SIZE          0x0B00U // Size of Tank sprite data
 
 #define SPRITE_DATA_END        (TANK_DATA + TANK_DATA_SIZE) // End of used data area
 
@@ -110,6 +110,7 @@ extern unsigned EXPLOSION_LEFT_CONFIG; // Explosion Sprite Configuration
 extern unsigned EXPLOSION_RIGHT_CONFIG;// Explosion Sprite Configuration
 extern unsigned SMALL_EXPLOSION_CONFIG; // Small Explosion Sprite Configuration
 extern unsigned TANK_CONFIG; // Tank Sprite Configuration
+extern unsigned EBULLET_CONFIG; // Enemy Bullet Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------
@@ -210,10 +211,6 @@ extern unsigned GROUND_MAP_END;
 #define NTEXT 1
 #define MESSAGE_WIDTH 36
 #define MESSAGE_HEIGHT 2
-#define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT)
-
-// EBULLETS
-#define NEBULLET 2 // Number of enemy bullets
-
+#define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT + 1) // +1 for null terminator
 
 #endif // CONSTANTS_H
