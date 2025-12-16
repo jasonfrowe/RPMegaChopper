@@ -39,7 +39,7 @@ void update_explosion(void) {
 
     // --- ANIMATION ---
     exp_timer++;
-    if (exp_timer > 4) { // Speed of explosion
+    if (exp_timer > 8) { // Speed of explosion
         exp_timer = 0;
         exp_frame++;
         if (exp_frame > 4) { // 5 Frames (0-4)

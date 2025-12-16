@@ -6,7 +6,12 @@
 #include "input.h"
 #include "player.h"
 #include "constants.h"
+#include "explosion.h"
+#include "hostages.h"
 
+
+PlayerState player_state = PLAYER_ALIVE;
+uint8_t death_timer = 0; // Generic timer for death animations
 
 #define CHOPPER_START_POS_XL ((SCREEN_WIDTH / 2) - 16)  // Start roughly in middle of screen
 
@@ -38,8 +43,6 @@ bool btn2_last_state = false;
 // -1 = Came from Left, 1 = Came from Right
 int8_t last_side_facing = -1;
 
-
-
 // Helper to calculate the memory offset for a specific animation frame
 // frame_idx: 0 to 21
 // part: 0 = Left Half, 1 = Right Half
@@ -64,279 +67,300 @@ extern uint8_t anim_timer;
 uint8_t base_frame = FRAME_CENTER_IDLE;
 bool is_landed = true;
 
+void respawn_player(void) {
+    player_state = PLAYER_ALIVE;
+
+    // Ensure Effects are hidden
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+    
+    // Reset Position (Home Base)
+    chopper_world_x = (int32_t)CHOPPER_START_POS << SUBPIXEL_BITS;
+    chopper_y = GROUND_Y_SUB;
+    velocity_x = 0;
+    
+    // Reset Camera (Centered on Home)
+    camera_x = chopper_world_x - (144 << SUBPIXEL_BITS);
+    if (camera_x > CAMERA_MAX_X) camera_x = CAMERA_MAX_X; // Safety clamp  <-- Check for CAMERA_MAX_X definition
+
+    // Reset Heading
+    current_heading = FACING_LEFT; // Face the enemy
+    
+    // Reset any other flags
+    is_turning = false;
+    
+    // Note: We do NOT reset hostages_rescued or destroyed bases.
+    // The war continues!
+}
+
+void kill_player(void) {
+    if (player_state != PLAYER_ALIVE) return;
+
+    player_state = PLAYER_DYING_FALLING;
+    death_timer = 0;
+    
+    // --- SHOW HIT EFFECT (FRAME 0) ---
+    int16_t screen_x = ((chopper_world_x - camera_x) >> SUBPIXEL_BITS) + 8;
+    int16_t screen_y = (chopper_y >> SUBPIXEL_BITS) + 4;
+
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, x_pos_px, screen_x);
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, y_pos_px, screen_y);
+    
+    // Set to Frame 0
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)BOOM_DATA);
+}
+
 void update_chopper_state(void) {
     
     // -----------------------------------------------------------
-    // 1. UPDATE BLADE ANIMATION (0 or 1)
+    // 1. GLOBAL ANIMATION TIMERS
     // -----------------------------------------------------------
     anim_timer++;
-    if (anim_timer > 2) { // Change frame every 2 VBlanks
+    if (anim_timer > 2) { 
         anim_timer = 0;
         blade_frame = !blade_frame;
     }
 
-    // -----------------------------------------------------------
-    // 2. DETERMINE FRAME BASED ON HEADING & INPUT
-    // -----------------------------------------------------------
+    // =========================================================
+    // STATE: ALIVE (Your Existing Logic)
+    // =========================================================
+    if (player_state == PLAYER_ALIVE) {
 
-    bool input_left = false;
-    bool input_right = false;
-    bool input_up = false;
-    bool input_down = false;
-    bool input_btn2 = false;
-
-    input_left = is_action_pressed(0, ACTION_ROTATE_LEFT);
-    input_right = is_action_pressed(0, ACTION_ROTATE_RIGHT);
-    input_up = is_action_pressed(0, ACTION_THRUST);
-    input_down = is_action_pressed(0, ACTION_REVERSE_THRUST);
-    input_btn2 = is_action_pressed(0, ACTION_SUPER_FIRE);
-    
-    // -----------------------------------------------------------
-    // 2. INPUT HANDLING (BUTTON 2)
-    // -----------------------------------------------------------
-    // Only accept input if we aren't already turning
-    if (input_btn2 && !btn2_last_state && !is_turning && !is_landed) {
+        // --- INPUT READING ---
+        bool input_left = is_action_pressed(0, ACTION_ROTATE_LEFT);
+        bool input_right = is_action_pressed(0, ACTION_ROTATE_RIGHT);
+        bool input_up = is_action_pressed(0, ACTION_THRUST);
+        bool input_down = is_action_pressed(0, ACTION_REVERSE_THRUST);
+        bool input_btn2 = is_action_pressed(0, ACTION_SUPER_FIRE);
         
-        // Calculate the Target Heading
-        if (current_heading == FACING_LEFT) {
-            next_heading = FACING_CENTER;
-            last_side_facing = -1;
+        // --- TURN LOGIC (Button 2) ---
+        if (input_btn2 && !btn2_last_state && !is_turning && !is_landed) {
+            if (current_heading == FACING_LEFT) {
+                next_heading = FACING_CENTER;
+                last_side_facing = -1;
+            }
+            else if (current_heading == FACING_RIGHT) {
+                next_heading = FACING_CENTER;
+                last_side_facing = 1;
+            }
+            else { 
+                if (last_side_facing == -1) next_heading = FACING_RIGHT;
+                else next_heading = FACING_LEFT;
+            }
+            is_turning = true;
+            turn_timer = TURN_DURATION;
         }
-        else if (current_heading == FACING_RIGHT) {
-            next_heading = FACING_CENTER;
-            last_side_facing = 1;
-        }
-        else { 
-            // At Center -> Go to the "other" side
-            if (last_side_facing == -1) {
-                next_heading = FACING_RIGHT;
+        btn2_last_state = input_btn2;
+
+        // Helper: Are we currently touching the ground?
+        is_landed = (chopper_y >= GROUND_Y_SUB);
+
+        // --- PHYSICS & FRAME SELECTION ---
+        if (is_turning) {
+            turn_timer--;
+            
+            if (current_heading == FACING_LEFT || next_heading == FACING_LEFT) {
+                base_frame = FRAME_TRANS_L_C;
             } else {
-                next_heading = FACING_LEFT;
+                base_frame = FRAME_TRANS_R_C;
+            }
+
+            // Friction
+            if (velocity_x > 0) velocity_x -= FRICTION_RATE;
+            if (velocity_x < 0) velocity_x += FRICTION_RATE;
+
+            if (turn_timer == 0) {
+                current_heading = next_heading;
+                is_turning = false;
+            }
+        } 
+        else {
+            // NORMAL FLIGHT LOGIC
+            if (current_heading == FACING_CENTER) {
+                if (input_left && !is_landed) {
+                    base_frame = FRAME_BANK_LEFT;
+                    if (velocity_x > -ONE_PIXEL) velocity_x -= ACCEL_RATE; 
+                } 
+                else if (input_right && !is_landed) {
+                    base_frame = FRAME_BANK_RIGHT;
+                    if (velocity_x < ONE_PIXEL) velocity_x += ACCEL_RATE;
+                } 
+                else {
+                    base_frame = FRAME_CENTER_IDLE;
+                    if (velocity_x < 0) velocity_x += FRICTION_RATE;
+                    if (velocity_x > 0) velocity_x -= FRICTION_RATE;
+                }
+            }
+            else if (current_heading == FACING_LEFT) {
+                if (input_left && !is_landed) {
+                    base_frame = FRAME_LEFT_ACCEL;
+                    if (velocity_x > -MAX_SPEED) velocity_x -= ACCEL_RATE;
+                }
+                else if (input_right && !is_landed) {
+                    base_frame = FRAME_LEFT_BRAKE;
+                    if (velocity_x < MAX_SPEED) velocity_x += ACCEL_RATE;
+                }
+                else {
+                    base_frame = FRAME_LEFT_IDLE;
+                    if (velocity_x < 0) velocity_x += FRICTION_RATE;
+                    if (velocity_x > 0) velocity_x -= FRICTION_RATE;
+                }
+            }
+            else if (current_heading == FACING_RIGHT) {
+                if (input_right && !is_landed) {
+                    base_frame = FRAME_RIGHT_ACCEL;
+                    if (velocity_x < MAX_SPEED) velocity_x += ACCEL_RATE;
+                }
+                else if (input_left && !is_landed) {
+                    base_frame = FRAME_RIGHT_BRAKE;
+                    if (velocity_x > -MAX_SPEED) velocity_x -= ACCEL_RATE;
+                }
+                else {
+                    base_frame = FRAME_RIGHT_IDLE;
+                    if (velocity_x < 0) velocity_x += FRICTION_RATE;
+                    if (velocity_x > 0) velocity_x -= FRICTION_RATE;
+                }
             }
         }
 
-        // Start the Turn
-        is_turning = true;
-        turn_timer = TURN_DURATION;
-    }
-    btn2_last_state = input_btn2;
-
-    // -----------------------------------------------------------
-    // 3. PHYSICS & FRAME SELECTION
-    // -----------------------------------------------------------
-
-    // Helper: Are we currently touching the ground?
-    is_landed = (chopper_y >= GROUND_Y_SUB);
-
-    if (is_turning) {
-        // --- TURNING LOGIC ---
-        turn_timer--;
-
-        // Determine which transition frame to show
-        // If turning Left<->Center, use Frame 2
-        // If turning Right<->Center, use Frame 6
-        if (current_heading == FACING_LEFT || next_heading == FACING_LEFT) {
-            base_frame = FRAME_TRANS_L_C;
-        } else {
-            base_frame = FRAME_TRANS_R_C;
+        // --- VERTICAL PHYSICS ---
+        if (input_up) {
+            chopper_y -= CLIMB_SPEED;
+        } 
+        else if (input_down) {
+            chopper_y += DIVE_SPEED;
+        } 
+        else {
+            if (chopper_y < GROUND_Y_SUB) {
+                chopper_y += GRAVITY_SPEED;
+            }
         }
 
-        // Apply Friction while turning (Helicopter shouldn't stop instantly)
-        if (velocity_x > 0) velocity_x -= FRICTION_RATE;
-        if (velocity_x < 0) velocity_x += FRICTION_RATE;
-
-        // End of Turn
-        if (turn_timer == 0) {
-            current_heading = next_heading;
-            is_turning = false;
-        }
-    } 
-    else {
-        // --- NORMAL FLIGHT LOGIC ---
+        // --- BOUNDARY CHECKS ---
+        if (chopper_y < CEILING_Y_SUB) chopper_y = CEILING_Y_SUB;
         
-        // CASE A: FACING CENTER
-        if (current_heading == FACING_CENTER) {
-            if (input_left && !is_landed) {
-                base_frame = FRAME_BANK_LEFT;
-                // Drift Left
-                if (velocity_x > -ONE_PIXEL) velocity_x -= ACCEL_RATE; 
-            } 
-            else if (input_right && !is_landed) {
-                base_frame = FRAME_BANK_RIGHT;
-                // Drift Right
-                if (velocity_x < ONE_PIXEL) velocity_x += ACCEL_RATE;
-            } 
-            else {
-                base_frame = FRAME_CENTER_IDLE;
-                // Sub-pixel Friction
-                if (velocity_x < 0) velocity_x += FRICTION_RATE;
-                if (velocity_x > 0) velocity_x -= FRICTION_RATE;
-            }
+        if (chopper_y > GROUND_Y_SUB) {
+            chopper_y = GROUND_Y_SUB;
+            velocity_x = 0; 
         }
-        // CASE B: FACING LEFT
-        else if (current_heading == FACING_LEFT) {
-            if (input_left && !is_landed) {
-                base_frame = FRAME_LEFT_ACCEL;
-                if (velocity_x > -MAX_SPEED) velocity_x -= ACCEL_RATE;
-            }
-            else if (input_right && !is_landed) {
-                base_frame = FRAME_LEFT_BRAKE;
-                if (velocity_x < MAX_SPEED) velocity_x += ACCEL_RATE;
-            }
-            else {
-                base_frame = FRAME_LEFT_IDLE;
-                if (velocity_x < 0) velocity_x += FRICTION_RATE;
-                if (velocity_x > 0) velocity_x -= FRICTION_RATE;
-            }
+
+        // Calculate next potential position
+        int32_t next_world_x = chopper_world_x + velocity_x;
+        int16_t next_pixel_x = next_world_x >> SUBPIXEL_BITS;
+
+        if (next_pixel_x < WORLD_SIZE_MIN) {
+            velocity_x = 0; 
+            chopper_world_x = ((int32_t)WORLD_SIZE_MIN << SUBPIXEL_BITS);
         }
-        // CASE C: FACING RIGHT
-        else if (current_heading == FACING_RIGHT) {
-            if (input_right && !is_landed) {
-                base_frame = FRAME_RIGHT_ACCEL;
-                if (velocity_x < MAX_SPEED) velocity_x += ACCEL_RATE;
-            }
-            else if (input_left && !is_landed) {
-                base_frame = FRAME_RIGHT_BRAKE;
-                if (velocity_x > -MAX_SPEED) velocity_x -= ACCEL_RATE;
-            }
-            else {
-                base_frame = FRAME_RIGHT_IDLE;
-                if (velocity_x < 0) velocity_x += FRICTION_RATE;
-                if (velocity_x > 0) velocity_x -= FRICTION_RATE;
-            }
+        else if (next_pixel_x > WORLD_SIZE_MAX) {
+            velocity_x = 0;
+            chopper_world_x = ((int32_t)WORLD_SIZE_MAX << SUBPIXEL_BITS);
         }
+        else {
+            chopper_world_x += velocity_x;
+        }
+
+        // Keep local trackers in sync (for compatibility)
+        chopper_xl += velocity_x;
+        chopper_xr += velocity_x;
     }
 
-
-    // -----------------------------------------------------------
-    // 4. APPLY VERTICAL PHYSICS (GRAVITY)
-    // -----------------------------------------------------------
-    
-    if (input_up) {
-        // Active Climb (Fight Gravity)
-        chopper_y -= CLIMB_SPEED;
-    } 
-    else if (input_down) {
-        // Active Dive (With Gravity)
-        chopper_y += DIVE_SPEED;
-    } 
-    else {
-        // No Input -> Passive Descent (Gravity)
-        // Check if we are already on the ground to prevent "jitter"
-        if (chopper_y < GROUND_Y_SUB) {
-            chopper_y += GRAVITY_SPEED;
-        }
-    }
-
-    // -----------------------------------------------------------
-    // 5. BOUNDARY CHECKS (CLAMP)
-    // -----------------------------------------------------------
-
-    // Hit the Ceiling?
-    if (chopper_y < CEILING_Y_SUB) {
-        chopper_y = CEILING_Y_SUB;
-    }
-    
-    // Hit the Ground?
-    if (chopper_y > GROUND_Y_SUB) {
-        chopper_y = GROUND_Y_SUB;
+    // =========================================================
+    // STATE: FALLING (Spinning Down)
+    // =========================================================
+    else if (player_state == PLAYER_DYING_FALLING) {
         
-        // Optional: If you want to kill horizontal momentum when landing
-        velocity_x = 0; 
-    }
-
-    // Left Boundary
-    if (chopper_xl < LEFT_BOUNDARY_SUB) {
-        chopper_xl = LEFT_BOUNDARY_SUB;
-        chopper_xr = chopper_xl + 256; // if SUBPIXEL_BITS changed, update here too
-        // velocity_x = 0;
-    }
-
-    // Right Boundary
-    if (chopper_xr > RIGHT_BOUNDARY_SUB) {
-        chopper_xr = RIGHT_BOUNDARY_SUB;
-        chopper_xl = chopper_xr - 256; // if SUBPIXEL_BITS changed, update here too
-        // velocity_x = 0;
-    }
-
-    // World Boundaries
-    // Calculate next potential position
-    int32_t next_world_x = chopper_world_x + velocity_x;
-    int16_t next_pixel_x = next_world_x >> SUBPIXEL_BITS;
-
-    // Check Left Wall (0)
-    if (next_pixel_x < WORLD_SIZE_MIN) {
-        velocity_x = 0; 
-        chopper_world_x = ((int32_t)WORLD_SIZE_MIN << SUBPIXEL_BITS);
-    }
-    // Check Right Wall (4096)
-    else if (next_pixel_x > WORLD_SIZE_MAX) {
-        velocity_x = 0;
-        chopper_world_x = ((int32_t)WORLD_SIZE_MAX << SUBPIXEL_BITS);
-    }
-    else {
-        // Valid move
+        // 1. Gravity (Fall Fast)
+        chopper_y += (3 << SUBPIXEL_BITS); 
+        
+        // 2. Momentum (Maintain some forward speed)
         chopper_world_x += velocity_x;
+
+        // 3. Spin Animation
+        death_timer++;
+        // Toggle frames every 4 ticks
+        if ((death_timer / 4) % 2 == 0) base_frame = 12; // Nose Up Left
+        else base_frame = 18; // Nose Up Right
+        
+        // 4. Boom Animation (Flash Effect)
+        if (death_timer == 5) {
+            // Switch to Boom Frame 1
+            xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(BOOM_DATA + 512));
+        }
+        else if (death_timer == 10) {
+            // Hide Boom
+            xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+        }
+
+        // 5. Ground Impact
+        if (chopper_y >= GROUND_Y_SUB) {
+            chopper_y = GROUND_Y_SUB;
+            
+            // Trigger Crash Event
+            player_state = PLAYER_DYING_CRASHING;
+            death_timer = 0;
+            
+            // Big Explosion
+            trigger_explosion(chopper_world_x + (8 << SUBPIXEL_BITS), GROUND_Y_SUB);
+            
+            // Kill everyone
+            hostages_lost_count += hostages_on_board;
+            hostages_on_board = 0;
+        }
+    }
+
+    // =========================================================
+    // STATE: CRASHING (Exploding)
+    // =========================================================
+    else if (player_state == PLAYER_DYING_CRASHING) {
+        death_timer++;
+        if (death_timer > 60) {
+            respawn_player();
+        }
     }
 
     // -----------------------------------------------------------
-    // 6. APPLY TO POSITION
+    // CAMERA UPDATE (Only if not fully crashed)
+    // -----------------------------------------------------------
+    if (player_state != PLAYER_DYING_CRASHING) {
+        int16_t screen_rel_px = (chopper_world_x - camera_x) >> SUBPIXEL_BITS;
+
+        if (screen_rel_px > SCROLL_RIGHT_EDGE) {
+            camera_x += (chopper_world_x - camera_x) - (SCROLL_RIGHT_EDGE << SUBPIXEL_BITS);
+        } else if (screen_rel_px < SCROLL_LEFT_EDGE) {
+            camera_x += (chopper_world_x - camera_x) - (SCROLL_LEFT_EDGE << SUBPIXEL_BITS);
+        }
+
+        if (camera_x < 0) camera_x = 0;
+        if (camera_x > CAMERA_MAX_X) camera_x = CAMERA_MAX_X;
+    }
+
+    // -----------------------------------------------------------
+    // HARDWARE UPDATE
     // -----------------------------------------------------------
     
-    // Apply Horizontal Velocity
-    chopper_xl += velocity_x;
-    chopper_xr += velocity_x;
-
-    // Update World Position
-    chopper_world_x += velocity_x;
-
-    // Calculate Screen Position (Where is the chopper relative to camera?)
-    int16_t screen_x_sub = chopper_world_x - camera_x;
-    int16_t screen_x_px  = screen_x_sub >> SUBPIXEL_BITS;
-
-    // Pushing Right Edge?
-    if (screen_x_px > SCROLL_RIGHT_EDGE) {
-        // Move camera right to keep chopper at edge
-        int32_t diff = screen_x_sub - (SCROLL_RIGHT_EDGE << SUBPIXEL_BITS);
-        camera_x += diff;
-    }
-    
-    // Pushing Left Edge?
-    if (screen_x_px < SCROLL_LEFT_EDGE) {
-        // Move camera left
-        int32_t diff = screen_x_sub - (SCROLL_LEFT_EDGE << SUBPIXEL_BITS);
-        camera_x += diff;
-    }
-
-    // printf("CamX: %ld World_X: %ld Screen_X: %d\n", camera_x, chopper_world_x, chopper_xl >> SUBPIXEL_BITS);
-
-    // -----------------------------------------------------------
-    // 7. UPDATE TO HARDWARE
-    // -----------------------------------------------------------
-
-    // We convert from Sub-Pixels to Screen Pixels here using shift (>>)
+    // Calculate final screen positions
     int16_t hardware_xl = (chopper_world_x - camera_x) >> SUBPIXEL_BITS;
-    int16_t hardware_xr = (chopper_world_x - camera_x + 256) >> SUBPIXEL_BITS;
+    int16_t hardware_xr = (chopper_world_x - camera_x + 256) >> SUBPIXEL_BITS; // +16px
     int16_t hardware_y = chopper_y >> SUBPIXEL_BITS;
 
-    // Calculate Final Pointer (Base + Blade Toggle)
-    // 1024 bytes per Frame Pair (Left Sprite + Right Sprite)
+    // If crashing, hide the chopper sprite so we only see the explosion
+    if (player_state == PLAYER_DYING_CRASHING) {
+        hardware_y = -32;
+    }
+
     int final_frame_idx = base_frame + blade_frame;
     uint16_t ptr_offset = final_frame_idx * 1024; 
 
-    // Update XRAM Configs (Safe Addresses from previous step)
-    
     // Left Half
     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(CHOPPER_DATA + ptr_offset));
     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, hardware_xl);
     xram0_struct_set(CHOPPER_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
 
-    // Right Half (Offset by 512 bytes for the image data)
+    // Right Half
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(CHOPPER_DATA + ptr_offset + 512));
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, hardware_xr);
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
 
-
-    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_pos_px, -((camera_x/2) >> SUBPIXEL_BITS));
-
+    // Scroll
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_pos_px, -(camera_x >> SUBPIXEL_BITS));
 }

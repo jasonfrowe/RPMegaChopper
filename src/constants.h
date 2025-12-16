@@ -11,6 +11,8 @@
 #define WORLD_MAX_X_SUB (WORLD_SIZE_MAX << SUBPIXEL_BITS)
 #define SCREEN_CENTER_OFFSET ((SCREEN_WIDTH / 2) - 16) // ~144 pixels
 
+#define CAMERA_MAX_X  (((int32_t)WORLD_SIZE_MAX - 320) << SUBPIXEL_BITS)
+
 // We want to start on the Far Right side of the map
 #define START_WORLD_X       3900 // Will Go away
 
@@ -83,7 +85,13 @@
 #define TANK_DATA              (SMALL_EXPLOSION_DATA + SMALL_EXPLOSION_DATA_SIZE) // Tank sprite data address
 #define TANK_DATA_SIZE          0x0B00U // Size of Tank sprite data
 
-#define SPRITE_DATA_END        (TANK_DATA + TANK_DATA_SIZE) // End of used data area
+#define BOOM_DATA              (TANK_DATA + TANK_DATA_SIZE) // Boom sprite data address
+#define BOOM_DATA_SIZE          0x0400U // Size of Boom sprite data
+
+#define BOMB_DATA              (BOOM_DATA + BOOM_DATA_SIZE) // Bomb sprite data address
+#define BOMB_DATA_SIZE          0x0080U // Size of Bomb sprite data
+
+#define SPRITE_DATA_END        (BOMB_DATA + BOMB_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
@@ -111,6 +119,7 @@ extern unsigned EXPLOSION_RIGHT_CONFIG;// Explosion Sprite Configuration
 extern unsigned SMALL_EXPLOSION_CONFIG; // Small Explosion Sprite Configuration
 extern unsigned TANK_CONFIG; // Tank Sprite Configuration
 extern unsigned EBULLET_CONFIG; // Enemy Bullet Sprite Configuration
+extern unsigned BOOM_CONFIG; // Boom Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------

@@ -41,6 +41,7 @@ unsigned EXPLOSION_RIGHT_CONFIG;    // Explosion Sprite Configuration
 unsigned SMALL_EXPLOSION_CONFIG;    // Small Explosion Sprite Configuration
 unsigned TANK_CONFIG;               // Tank Sprite Configuration
 unsigned EBULLET_CONFIG;            // Enemy Bullet Sprite Configuration
+unsigned BOOM_CONFIG;               // Boom Sprite Configuration
 
 
 static void init_graphics(void)
@@ -176,9 +177,16 @@ static void init_graphics(void)
         xram0_struct_set(ebullet_cfg, vga_mode4_sprite_t, has_opacity_metadata, false);
     }
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET, 2); // Enable sprites
+    BOOM_CONFIG = EBULLET_CONFIG + (NEBULLET * sizeof(vga_mode4_sprite_t));
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BOOM_DATA); // Enemy Bullet sprite data -- same as player bullet
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
+    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    unsigned FOREGROUND_SPRITE_END = EBULLET_CONFIG + (NEBULLET * sizeof(vga_mode4_sprite_t));
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 1, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = BOOM_CONFIG + sizeof(vga_mode4_sprite_t);
 
 
     // -----------------------------------------------------
@@ -338,7 +346,7 @@ static void init_graphics(void)
         xram0_struct_set(ptr, vga_mode1_config_t, x_wrap, 0);
         xram0_struct_set(ptr, vga_mode1_config_t, y_wrap, 0);
         xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 7); //Bug: first char duplicated if not set to zero
-        xram0_struct_set(ptr, vga_mode1_config_t, y_pos_px, 1);
+        xram0_struct_set(ptr, vga_mode1_config_t, y_pos_px, 5);
         xram0_struct_set(ptr, vga_mode1_config_t, width_chars, MESSAGE_WIDTH);
         xram0_struct_set(ptr, vga_mode1_config_t, height_chars, MESSAGE_HEIGHT);
         xram0_struct_set(ptr, vga_mode1_config_t, xram_data_ptr, text_message_addr);
@@ -356,9 +364,9 @@ static void init_graphics(void)
     RIA.addr0 = text_message_addr;
     RIA.step0 = 1;
     for (uint8_t i = 0; i < MESSAGE_LENGTH; i++) {
-        RIA.rw0 = message[i];
-        RIA.rw0 = 0xE0;
-        RIA.rw0 = 0x00;
+        RIA.rw0 = ' ';
+        RIA.rw0 = HUD_COL_WHITE;
+        RIA.rw0 = HUD_COL_BG;
     }
 
     printf("Next Free XRAM Address: 0x%04X\n", text_storage_end);

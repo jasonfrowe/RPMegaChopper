@@ -146,6 +146,27 @@ void update_tank_bullets(void) {
         tank_bullets[b].y       += tank_bullets[b].vy;
         tank_bullets[b].vy      += TANK_BULLET_GRAVITY; // Gravity Apply
 
+        // --- PLAYER COLLISION ---
+        if (player_state == PLAYER_ALIVE) {
+            // Chopper Hitbox: +/- 12px width, +/- 8px height
+            // Center is WorldX + 16, Y + 8
+            int32_t chop_cx = chopper_world_x + (16 << SUBPIXEL_BITS);
+            int32_t chop_cy = chopper_y + (8 << SUBPIXEL_BITS);
+
+            if (labs(tank_bullets[b].world_x - chop_cx) < (12 << SUBPIXEL_BITS)) {
+                if (labs(tank_bullets[b].y - chop_cy) < (8 << SUBPIXEL_BITS)) {
+                    
+                    // HIT!
+                    tank_bullets[b].active = false;
+                    xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
+                    
+                    kill_player();
+                    continue; 
+                }
+            }
+        }
+
+
         // --- GROUND CHECK ---
         // Hit the "Main Ground" (Hostage layer), not the "Tank Ground"
         if (tank_bullets[b].y > EBULLET_GROUND && tank_bullets[b].vy  > 0){
