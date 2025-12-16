@@ -39,6 +39,7 @@ unsigned EXPLOSION_LEFT_CONFIG;     // Explosion Sprite Configuration
 unsigned EXPLOSION_RIGHT_CONFIG;    // Explosion Sprite Configuration
 unsigned SMALL_EXPLOSION_CONFIG;    // Small Explosion Sprite Configuration
 unsigned TANK_CONFIG;               // Tank Sprite Configuration
+unsigned EBULLET_CONFIG;            // Enemy Bullet Sprite Configuration
 
 
 static void init_graphics(void)
@@ -156,16 +157,27 @@ static void init_graphics(void)
 
     // Initialize Logical State
     for (int t = 0; t < NUM_TANKS; t++) {
-        tanks[t].active = true;
+        tanks[t].active = false;
         tanks[t].world_x = TANK_SPAWNS[t];
         tanks[t].y = GROUND_Y_SUB + (32 << SUBPIXEL_BITS); // Sit on ground
         tanks[t].direction = -1; // Move Left initially
         tanks[t].health = 3;
     }
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites, 2); // Enable sprites
+    EBULLET_CONFIG = TANK_CONFIG + (total_tank_sprites * sizeof(vga_mode4_sprite_t));
 
-    unsigned FOREGROUND_SPRITE_END = TANK_CONFIG + (total_tank_sprites * sizeof(vga_mode4_sprite_t));
+    for (int i = 0; i < NEBULLET; i++) {
+        unsigned ebullet_cfg = EBULLET_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+        xram0_struct_set(ebullet_cfg, vga_mode4_sprite_t, x_pos_px, -8); // Off-screen initially
+        xram0_struct_set(ebullet_cfg, vga_mode4_sprite_t, y_pos_px, -8); 
+        xram0_struct_set(ebullet_cfg, vga_mode4_sprite_t, xram_sprite_ptr, BULLET_DATA); // Enemy Bullet sprite data -- same as player bullet
+        xram0_struct_set(ebullet_cfg, vga_mode4_sprite_t, log_size, 1);  // 2x2 sprite (2^1) 
+        xram0_struct_set(ebullet_cfg, vga_mode4_sprite_t, has_opacity_metadata, false);
+    }
+
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = EBULLET_CONFIG + (NEBULLET * sizeof(vga_mode4_sprite_t));
 
 
     // -----------------------------------------------------
@@ -387,7 +399,14 @@ void init_game_logic(void) {
         base_state[i].destroyed = false;
         base_state[i].hostages_remaining = HOSTAGES_PER_BASE;
         base_state[i].spawn_timer = 0;
+        base_state[i].tanks_remaining = TANKS_PER_BASE;
     }
+
+    // Reset Active Tank Pool
+    for (int t = 0; t < NUM_TANKS; t++) {
+        tanks[t].active = false;
+    }
+
 }
 
 

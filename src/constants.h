@@ -5,8 +5,10 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-#define WORLD_SIZE_MIN 0
-#define WORLD_SIZE_MAX 4096
+#define WORLD_SIZE_MIN 0L
+#define WORLD_SIZE_MAX 4096L
+#define WORLD_MIN_X_SUB (WORLD_SIZE_MIN << SUBPIXEL_BITS)
+#define WORLD_MAX_X_SUB (WORLD_SIZE_MAX << SUBPIXEL_BITS)
 #define SCREEN_CENTER_OFFSET ((SCREEN_WIDTH / 2) - 16) // ~144 pixels
 
 // We want to start on the Far Right side of the map
@@ -209,6 +211,9 @@ extern unsigned GROUND_MAP_END;
 #define MESSAGE_WIDTH 36
 #define MESSAGE_HEIGHT 2
 #define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT)
+
+// EBULLETS
+#define NEBULLET 2 // Number of enemy bullets
 
 
 #endif // CONSTANTS_H

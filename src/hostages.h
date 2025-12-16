@@ -11,7 +11,8 @@
 typedef struct {
     bool destroyed;
     uint8_t hostages_remaining;
-    uint8_t spawn_timer;    // Delay between spawns
+    uint8_t spawn_timer;
+    uint8_t tanks_remaining; // NEW: How many tanks are inside?
 } EnemyBase;
 
 extern EnemyBase base_state[];

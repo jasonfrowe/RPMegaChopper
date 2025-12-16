@@ -2,9 +2,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "constants.h"
 #include "tanks.h"
 #include "player.h"
+#include "enemybase.h"
+#include "hostages.h"
 
 
 Tank tanks[NUM_TANKS];
@@ -15,12 +18,107 @@ const int32_t TANK_SPAWNS[NUM_TANKS] = {
     3000L << SUBPIXEL_BITS
 };
 
+// Spawn Timer
+static int tank_spawn_timer = 0;
+
+int get_closest_base_index(void) {
+    int closest_i = -1;
+    int32_t min_dist = 0x7FFFFFFF;
+
+    for (int i = 0; i < NUM_ENEMY_BASES; i++) {
+        // REMOVED: if (base_state[i].destroyed) continue; 
+        
+        int32_t base_x = ENEMY_BASE_LOCATIONS[i];
+        int32_t dist = labs(chopper_world_x - base_x);
+        
+        if (dist < min_dist) {
+            min_dist = dist;
+            closest_i = i;
+        }
+    }
+    return closest_i;
+}
+
 // Helper to get pointer to specific 16x16 tile index
 uint16_t get_tank_tile_ptr(int index) {
     return TANK_DATA + (index * 128);
 }
 
 void update_tanks(void) {
+
+    int closest_base_idx = get_closest_base_index();
+
+    // =========================================================
+    // 1. SPAWN LOGIC (Target Closest Base)
+    // =========================================================
+    int total_progress = hostages_rescued_count + hostages_on_board;
+    
+    // Timer handling
+    if (tank_spawn_timer > 0) tank_spawn_timer--;
+
+    if (total_progress >= TANK_SPAWN_TRIGGER && tank_spawn_timer == 0) {
+        
+        // Find an empty hardware slot
+        int free_slot = -1;
+        for (int t = 0; t < NUM_TANKS; t++) {
+            if (!tanks[t].active) {
+                free_slot = t;
+                break;
+            }
+        }
+
+        // Only spawn if we have a valid base with tanks
+        if (free_slot != -1 && closest_base_idx != -1 && base_state[closest_base_idx].tanks_remaining > 0) {
+            
+            int32_t base_x = ENEMY_BASE_LOCATIONS[closest_base_idx];
+            int32_t spawn_x = 0;
+            int8_t  start_dir = 0;
+
+            // Strategy: Alternating Flanks
+            bool spawn_left_side = (base_state[closest_base_idx].tanks_remaining % 2 == 0);
+
+            if (spawn_left_side) {
+                // LEFT FLANKER
+                int32_t ideal_x = base_x - TANK_SPAWN_OFFSET_X;
+                // If visible, push behind Left edge
+                if (ideal_x > camera_x) {
+                    spawn_x = camera_x - OFFSCREEN_BUFFER;
+                } else {
+                    spawn_x = ideal_x;
+                }
+                start_dir = 1; 
+            } 
+            else {
+                // RIGHT FLANKER
+                int32_t ideal_x = base_x + TANK_SPAWN_OFFSET_X;
+                int32_t camera_right = camera_x + SCREEN_WIDTH_SUB;
+                // If visible, push behind Right edge
+                if (ideal_x < camera_right) {
+                    spawn_x = camera_right + OFFSCREEN_BUFFER;
+                } else {
+                    spawn_x = ideal_x;
+                }
+                start_dir = -1;
+            }
+
+            // Clamp
+            if (spawn_x < WORLD_MIN_X_SUB) spawn_x = WORLD_MIN_X_SUB;
+            if (spawn_x > WORLD_MAX_X_SUB) spawn_x = WORLD_MAX_X_SUB;
+
+            // Activate
+            tanks[free_slot].active = true;
+            tanks[free_slot].base_id = closest_base_idx;
+            tanks[free_slot].world_x = spawn_x;
+            tanks[free_slot].y = GROUND_Y_SUB + (32 << SUBPIXEL_BITS);
+            tanks[free_slot].direction = start_dir;
+            tanks[free_slot].health = 3;
+            
+            base_state[closest_base_idx].tanks_remaining--;
+            tank_spawn_timer = 60; // 1 second delay between spawns
+        }
+    }
+
+
     
     for (int t = 0; t < NUM_TANKS; t++) {
         if (!tanks[t].active) {
@@ -29,29 +127,73 @@ void update_tanks(void) {
                 unsigned cfg = TANK_CONFIG + ((t*9 + s) * sizeof(vga_mode4_sprite_t));
                 xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
             }
-            continue;
+        continue;
         }
 
-        // ---------------------------------------------------
-        // 1. AI & MOVEMENT
-        // ---------------------------------------------------
-        // Simple Patrol: Reverse at boundaries or random logic
-        // For now, let's just make them drive slowly Left
-        tanks[t].world_x += (tanks[t].direction * (TANK_SPEED / 2)); // Half speed
-
-        // Animation Timer (Treads)
-        tanks[t].anim_timer++;
-        if (tanks[t].anim_timer > 10) {
-            tanks[t].anim_timer = 0;
-            tanks[t].anim_frame = !tanks[t].anim_frame; // Toggle 0/1
+        // AUTO-RECYCLE: If tank is far away AND belongs to a different base
+        // Return it to the garage so it can respawn at the new base.
+        int32_t dist_to_player = labs(tanks[t].world_x - chopper_world_x);
+        
+        if (dist_to_player > TANK_DESPAWN_DIST && tanks[t].base_id != closest_base_idx) {
+            tanks[t].active = false;
+            base_state[tanks[t].base_id].tanks_remaining++; // Return to old base inventory
+            continue; // Skip rest of loop (will be hidden next frame)
         }
+
+        // --- AI LOGIC ---
+        int32_t base_x = ENEMY_BASE_LOCATIONS[tanks[t].base_id];
+        int32_t dist_from_base = tanks[t].world_x - base_x;
+        int32_t chop_cx = chopper_world_x + (16 << SUBPIXEL_BITS);
+        int32_t tank_cx = tanks[t].world_x + (20 << SUBPIXEL_BITS); // Width 40, Center 20
+        int32_t dist_to_chopper = chop_cx - tank_cx;
+
+        // 1. Basic Desire
+        int8_t target_dir = (dist_to_chopper > 0) ? 1 : -1;
+
+        // 2. Leash (100px)
+        if (dist_from_base > TANK_LEASH_DIST)      target_dir = -1; 
+        else if (dist_from_base < -TANK_LEASH_DIST) target_dir = 1;
+
+        // 3. Stop if under chopper
+        if (labs(dist_to_chopper) < (4 << SUBPIXEL_BITS)) target_dir = 0;
+
+        // 4. STAGGERING (Prevent Overlap)
+        if (target_dir != 0) {
+            for (int other = 0; other < NUM_TANKS; other++) {
+                if (t == other || !tanks[other].active) continue;
+
+                int32_t sep = tanks[other].world_x - tanks[t].world_x;
+                
+                // If moving Right and someone is < 40px ahead
+                if (target_dir == 1 && sep > 0 && sep < TANK_SPACING) {
+                    target_dir = 0; // Wait
+                }
+                // If moving Left and someone is < 40px ahead (negative diff)
+                if (target_dir == -1 && sep < 0 && sep > -TANK_SPACING) {
+                    target_dir = 0; // Wait
+                }
+            }
+        }
+
+        // --- PHYSICS ---
+        tanks[t].direction = target_dir;
+        if (target_dir == 1)  tanks[t].world_x += TANK_SPEED;
+        if (target_dir == -1) tanks[t].world_x -= TANK_SPEED;
+
+        // --- ANIMATION ---
+        if (target_dir != 0) {
+            tanks[t].anim_timer++;
+            if (tanks[t].anim_timer > 8) {
+                tanks[t].anim_timer = 0;
+                tanks[t].anim_frame = !tanks[t].anim_frame;
+            }
+        }
+
 
         // ---------------------------------------------------
         // 2. TURRET AIMING
         // ---------------------------------------------------
         // Compare Tank Center X with Chopper Center X
-        int32_t tank_cx = tanks[t].world_x + (20 << SUBPIXEL_BITS); // Width 40, Center 20
-        int32_t chop_cx = chopper_world_x + (16 << SUBPIXEL_BITS);
         
         // Calculate difference in pixels
         int16_t diff_x = (chop_cx - tank_cx) >> SUBPIXEL_BITS;
@@ -76,8 +218,8 @@ void update_tanks(void) {
         int32_t screen_sub = tanks[t].world_x - camera_x;
         int16_t screen_px = screen_sub >> SUBPIXEL_BITS;
 
-        // Culling Check (Tank is 80px wide)
-        if (screen_px > -80 && screen_px < 320) {
+        // Culling Check (Tank is 40px wide)
+        if (screen_px > -100 && screen_px < 340) {
             
             // --- DRAW BODY (Sprites 0-4) ---
             // Indices: Frame 0 (0-4), Frame 1 (5-9)
