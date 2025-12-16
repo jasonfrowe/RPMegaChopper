@@ -6,6 +6,8 @@
 #define HOSTAGES_PER_BASE 16
 #define HOSTAGE_RUN_SPEED 8 // (1 << SUBPIXEL_BITS) // 1 pixel per frame
 
+#define SIGHT_RANGE (150 << SUBPIXEL_BITS)
+
 typedef struct {
     bool destroyed;
     uint8_t hostages_remaining;
