@@ -9,7 +9,6 @@
 #define TANK_WIDTH_PX       40  // 5 * 8px
 #define TANK_HEIGHT_PX      16  // Body(8) + Turret(8)
 #define TANK_SPEED          (1 << SUBPIXEL_BITS) // Slow movement
-
     
 // --- CONFIGURATION ---
 #define TANKS_PER_BASE      2
@@ -21,6 +20,7 @@
 #define OFFSCREEN_BUFFER    (32L << SUBPIXEL_BITS) // Spawn 32px off-screen
 #define TANK_DESPAWN_DIST   (400L << SUBPIXEL_BITS) // Distance to recycle tank
 #define TANK_SPACING        (45L << SUBPIXEL_BITS)  // Min distance between tanks
+#define TANK_SPAWN_DIST     (320L << SUBPIXEL_BITS) // Tank spawn distance from enemy base
   
 
 
@@ -44,6 +44,7 @@ typedef struct {
 
 extern Tank tanks[];
 extern const int32_t TANK_SPAWNS[];
+extern bool tanks_triggered;
 
 extern void update_tanks(void);
 

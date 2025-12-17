@@ -432,9 +432,8 @@ void init_game_logic(void) {
     for (int i = 0; i < NUM_ENEMY_BASES; i++) {
         base_state[i].destroyed = false;
         base_state[i].hostages_remaining = HOSTAGES_PER_BASE;
-        base_state[i].spawn_timer = 0;
-        base_state[i].tanks_remaining = TANKS_PER_BASE;
-        base_state[i].tank_cooldown = 0; // Ready to spawn
+        base_state[i].tanks_remaining = 0; // Start at 0
+        base_state[i].tank_cooldown = 0;
     }
 
     // Reset Active Tank Pool

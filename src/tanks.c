@@ -9,6 +9,8 @@
 #include "enemybase.h"
 #include "hostages.h"
 
+// --- TANK STATE ---
+bool tanks_triggered = false; // Have we collected 4 hostages yet?
 
 Tank tanks[NUM_TANKS];
 
@@ -45,22 +47,37 @@ uint16_t get_tank_tile_ptr(int index) {
 }
 
 void update_tanks(void) {
-
-    int closest_base_idx = get_closest_base_index();
-
-    // --- 1. UPDATE BASE COOLDOWNS ---
-    for (int i = 0; i < NUM_ENEMY_BASES; i++) {
-        if (base_state[i].tank_cooldown > 0) {
-            base_state[i].tank_cooldown--;
+    
+    // =========================================================
+    // 1. GLOBAL TRIGGER CHECK
+    // =========================================================
+    int total_progress = hostages_rescued_count + hostages_on_board;
+    
+    if (!tanks_triggered) {
+        if (total_progress >= TANK_SPAWN_TRIGGER) {
+            tanks_triggered = true;
+            // FILL ALL GARAGES
+            for (int i = 0; i < NUM_ENEMY_BASES; i++) {
+                base_state[i].tanks_remaining = TANKS_PER_BASE;
+                base_state[i].tank_cooldown = 0;
+            }
         }
     }
 
-    // --- 2. SPAWN LOGIC ---
-    int total_progress = hostages_rescued_count + hostages_on_board;
+    // =========================================================
+    // 2. SPAWN LOGIC (Closest Base Only)
+    // =========================================================
     if (tank_spawn_timer > 0) tank_spawn_timer--;
 
-    if (total_progress >= TANK_SPAWN_TRIGGER && tank_spawn_timer == 0) {
+    int b = get_closest_base_index();
+
+    // Only try to spawn if Triggered, Cooldown Ready, and Tanks Available
+    if (tanks_triggered && b != -1 && 
+        base_state[b].tanks_remaining > 0 && 
+        base_state[b].tank_cooldown == 0 && 
+        tank_spawn_timer == 0) {
         
+        // Find hardware slot
         int free_slot = -1;
         for (int t = 0; t < NUM_TANKS; t++) {
             if (!tanks[t].active) {
@@ -69,138 +86,124 @@ void update_tanks(void) {
             }
         }
 
-        int b = get_closest_base_index();
-
-        if (free_slot != -1 && b != -1 && 
-            base_state[b].tanks_remaining > 0 && 
-            base_state[b].tank_cooldown == 0) {
-            
+        if (free_slot != -1) {
             int32_t base_x = ENEMY_BASE_LOCATIONS[b];
-            int32_t spawn_x = 0;
-            int8_t  start_dir = 0;
+            
+            // Check currently active tanks for THIS base to find the empty side
+            bool has_left_tank = false;
+            bool has_right_tank = false;
 
-            // --- SMARTER FLANK LOGIC ---
-            // Default: Left Flanker (Drive Right)
-            bool spawn_left_side = true; 
-
-            // If there is ALREADY 1 tank out there, check which one it is
-            // so we can spawn the opposite.
-            if (base_state[b].tanks_remaining == 1) {
-                for (int t = 0; t < NUM_TANKS; t++) {
-                    if (tanks[t].active && tanks[t].base_id == b) {
-                        // If the existing tank is driving Right (Left Flanker),
-                        // we should spawn the Right Flanker (False).
-                        // If existing is driving Left (Right Flanker), 
-                        // we spawn Left Flanker (True).
-                        
-                        // We use the tank's CURRENT position relative to base to be sure
-                        if (tanks[t].world_x < base_x) {
-                            spawn_left_side = false; // Existing is Left, Spawn Right
-                        } else {
-                            spawn_left_side = true;  // Existing is Right, Spawn Left
-                        }
-                        break;
-                    }
+            for (int t = 0; t < NUM_TANKS; t++) {
+                if (tanks[t].active && tanks[t].base_id == b) {
+                    if (tanks[t].world_x < base_x) has_left_tank = true;
+                    else has_right_tank = true;
                 }
             }
-            // If tanks_remaining == 2, we default to Left Side (True) to start the pair.
 
-            if (spawn_left_side) {
-                // LEFT FLANKER (Spawns Left, Drives Right)
-                int32_t ideal_x = base_x - TANK_SPAWN_OFFSET_X;
-                if (ideal_x > camera_x) spawn_x = camera_x - OFFSCREEN_BUFFER;
-                else spawn_x = ideal_x;
-                start_dir = 1; 
+            // Decide where to spawn
+            int32_t spawn_x = 0;
+            bool can_spawn = false;
+            int8_t start_dir = 0;
+
+            // Priority: Fill Left, then Fill Right
+            if (!has_left_tank) {
+                // Try Left Spawn
+                spawn_x = base_x - TANK_SPAWN_DIST;
+                start_dir = 1; // Drive Right
+                can_spawn = true;
             } 
-            else {
-                // RIGHT FLANKER (Spawns Right, Drives Left)
-                int32_t ideal_x = base_x + TANK_SPAWN_OFFSET_X;
-                int32_t camera_right = camera_x + SCREEN_WIDTH_SUB;
-                if (ideal_x < camera_right) spawn_x = camera_right + OFFSCREEN_BUFFER;
-                else spawn_x = ideal_x;
-                start_dir = -1;
+            else if (!has_right_tank) {
+                // Try Right Spawn
+                spawn_x = base_x + TANK_SPAWN_DIST;
+                start_dir = -1; // Drive Left
+                can_spawn = true;
             }
 
-            // Clamp
-            if (spawn_x < WORLD_MIN_X_SUB) spawn_x = WORLD_MIN_X_SUB;
-            if (spawn_x > WORLD_MAX_X_SUB) spawn_x = WORLD_MAX_X_SUB;
+            // VISIBILITY CHECK
+            // If the calculated spawn point is on screen, ABORT.
+            if (can_spawn) {
+                // Screen range: CameraX to CameraX + 320
+                // We add a small buffer (32px) to ensure it's fully offscreen
+                int32_t screen_left = camera_x - OFFSCREEN_BUFFER;
+                int32_t screen_right = camera_x + SCREEN_WIDTH_SUB + OFFSCREEN_BUFFER;
 
-            // Activate
-            tanks[free_slot].active = true;
-            tanks[free_slot].base_id = b;
-            tanks[free_slot].world_x = spawn_x;
-            tanks[free_slot].y = GROUND_Y_SUB + (32 << SUBPIXEL_BITS);
-            tanks[free_slot].direction = start_dir;
-            tanks[free_slot].health = 1;
-            
-            base_state[b].tanks_remaining--;
-            tank_spawn_timer = 60; 
+                if (spawn_x > screen_left && spawn_x < screen_right) {
+                    can_spawn = false; // Player is looking at the spawn point!
+                }
+            }
+
+            // FINAL EXECUTION
+            if (can_spawn) {
+                // Clamp World Limits
+                if (spawn_x < WORLD_MIN_X_SUB) spawn_x = WORLD_MIN_X_SUB;
+                if (spawn_x > WORLD_MAX_X_SUB) spawn_x = WORLD_MAX_X_SUB;
+
+                tanks[free_slot].active = true;
+                tanks[free_slot].base_id = b;
+                tanks[free_slot].world_x = spawn_x;
+                tanks[free_slot].y = GROUND_Y_SUB + (32 << SUBPIXEL_BITS); // Your Y coord
+                tanks[free_slot].direction = start_dir;
+                tanks[free_slot].health = 1;
+                
+                base_state[b].tanks_remaining--;
+                tank_spawn_timer = 60; // Wait 1 second before trying next spawn
+            }
         }
     }
 
-
-    
+    // =========================================================
+    // 3. AI & MOVEMENT LOOP
+    // =========================================================
     for (int t = 0; t < NUM_TANKS; t++) {
+        // --- CLEANUP ---
         if (!tanks[t].active) {
-            // Hide all 9 sprites for this tank
+            // Hide sprites
             for(int s=0; s<9; s++) {
                 unsigned cfg = TANK_CONFIG + ((t*9 + s) * sizeof(vga_mode4_sprite_t));
                 xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
             }
-        continue;
+            continue;
         }
 
-        // AUTO-RECYCLE: If tank is far away AND belongs to a different base
-        // Return it to the garage so it can respawn at the new base.
-        int32_t dist_to_player = labs(tanks[t].world_x - chopper_world_x);
-        
-        if (dist_to_player > TANK_DESPAWN_DIST && tanks[t].base_id != closest_base_idx) {
+        // --- DESPAWN LOGIC ---
+        // If tank is from a different base (we moved away), remove it.
+        if (tanks[t].base_id != get_closest_base_index()) {
             tanks[t].active = false;
-            base_state[tanks[t].base_id].tanks_remaining++; // Return to old base inventory
-            continue; // Skip rest of loop (will be hidden next frame)
+            base_state[tanks[t].base_id].tanks_remaining++; // Return to garage
+            continue;
         }
 
         // --- AI LOGIC ---
         int32_t base_x = ENEMY_BASE_LOCATIONS[tanks[t].base_id];
         int32_t dist_from_base = tanks[t].world_x - base_x;
         int32_t chop_cx = chopper_world_x + (16 << SUBPIXEL_BITS);
-        int32_t tank_cx = tanks[t].world_x + (20 << SUBPIXEL_BITS); // Width 40, Center 20
-        int32_t dist_to_chopper = chop_cx - tank_cx;
+        int32_t dist_to_chopper = chop_cx - tanks[t].world_x;
 
         // 1. Basic Desire
         int8_t target_dir = (dist_to_chopper > 0) ? 1 : -1;
 
-        // 2. Leash (100px)
+        // 2. Leash Override (100px from base)
         if (dist_from_base > TANK_LEASH_DIST)      target_dir = -1; 
         else if (dist_from_base < -TANK_LEASH_DIST) target_dir = 1;
 
         // 3. Stop if under chopper
         if (labs(dist_to_chopper) < (4 << SUBPIXEL_BITS)) target_dir = 0;
 
-        // 4. STAGGERING (Prevent Overlap)
+        // 4. Staggering (Prevent Overlap)
         if (target_dir != 0) {
             for (int other = 0; other < NUM_TANKS; other++) {
                 if (t == other || !tanks[other].active) continue;
-
                 int32_t sep = tanks[other].world_x - tanks[t].world_x;
-                
-                // If moving Right and someone is < 40px ahead
-                if (target_dir == 1 && sep > 0 && sep < TANK_SPACING) {
-                    target_dir = 0; // Wait
-                }
-                // If moving Left and someone is < 40px ahead (negative diff)
-                if (target_dir == -1 && sep < 0 && sep > -TANK_SPACING) {
-                    target_dir = 0; // Wait
-                }
+                if (target_dir == 1 && sep > 0 && sep < TANK_SPACING) target_dir = 0;
+                if (target_dir == -1 && sep < 0 && sep > -TANK_SPACING) target_dir = 0;
             }
         }
 
-        // --- PHYSICS ---
+        // --- PHYSICS & ANIMATION ---
         tanks[t].direction = target_dir;
         if (target_dir == 1)  tanks[t].world_x += TANK_SPEED;
         if (target_dir == -1) tanks[t].world_x -= TANK_SPEED;
 
-        // --- ANIMATION ---
         if (target_dir != 0) {
             tanks[t].anim_timer++;
             if (tanks[t].anim_timer > 8) {
@@ -209,72 +212,46 @@ void update_tanks(void) {
             }
         }
 
+        // --- TURRET AIMING ---
+        int16_t diff_x_px = dist_to_chopper >> SUBPIXEL_BITS;
+        if (diff_x_px > 20)      tanks[t].turret_dir = TURRET_RIGHT;
+        else if (diff_x_px < -20) tanks[t].turret_dir = TURRET_UP_LEFT;
+        else                      tanks[t].turret_dir = TURRET_UP;
 
-        // ---------------------------------------------------
-        // 2. TURRET AIMING
-        // ---------------------------------------------------
-        // Compare Tank Center X with Chopper Center X
-        
-        // Calculate difference in pixels
-        int16_t diff_x = (chop_cx - tank_cx) >> SUBPIXEL_BITS;
-        int16_t diff_y = (chopper_y - tanks[t].y) >> SUBPIXEL_BITS; // negative means chopper is above
-
-        if (diff_x > 20) {
-            tanks[t].turret_dir = TURRET_RIGHT; // Player is to the Right
-        } 
-        else if (diff_x < -20) {
-            // Player is to the Left
-            // We only have Up-Left, Up, Right. Use Up-Left.
-            tanks[t].turret_dir = TURRET_UP_LEFT; 
-        } 
-        else {
-            // Player is roughly overhead
-            tanks[t].turret_dir = TURRET_UP;
-        }
-
-        // ---------------------------------------------------
-        // 3. RENDER (THE COMPOSITE SPRITE)
-        // ---------------------------------------------------
+        // --- RENDER ---
         int32_t screen_sub = tanks[t].world_x - camera_x;
         int16_t screen_px = screen_sub >> SUBPIXEL_BITS;
 
-        // Culling Check (Tank is 40px wide)
         if (screen_px > -100 && screen_px < 340) {
-            
-            // --- DRAW BODY (Sprites 0-4) ---
-            // Indices: Frame 0 (0-4), Frame 1 (5-9)
-            int body_start_idx = (tanks[t].anim_frame == 0) ? 0 : 5;
+            // (Your existing Body/Turret render code goes here)
+            // ...
+            // Re-use the render block from previous steps
+            // ...
+            int body_start = (tanks[t].anim_frame == 0) ? 0 : 5;
             int16_t base_y_px = tanks[t].y >> SUBPIXEL_BITS;
 
             for (int i = 0; i < 5; i++) {
                 unsigned cfg = TANK_CONFIG + ((t*9 + i) * sizeof(vga_mode4_sprite_t));
                 xram0_struct_set(cfg, vga_mode4_sprite_t, x_pos_px, (screen_px + (i * 8)));
                 xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, base_y_px);
-                xram0_struct_set(cfg, vga_mode4_sprite_t, xram_sprite_ptr, get_tank_tile_ptr(body_start_idx + i));
+                xram0_struct_set(cfg, vga_mode4_sprite_t, xram_sprite_ptr, get_tank_tile_ptr(body_start + i));
             }
 
-            // --- DRAW TURRET (Sprites 5-8) ---
-            // Width: 4 sprites (64px). 
-            // Centered on Body (80px): Offset X = 8px.
-            // Height: On top of body: Offset Y = -16px.
-            
-            int turret_start_idx;
+            int turret_start;
             switch(tanks[t].turret_dir) {
-                case TURRET_UP_LEFT: turret_start_idx = 10; break;
-                case TURRET_UP:      turret_start_idx = 14; break;
-                default:             turret_start_idx = 18; break; // Right
+                case TURRET_UP_LEFT: turret_start = 10; break;
+                case TURRET_UP:      turret_start = 14; break;
+                default:             turret_start = 18; break; 
             }
 
             for (int i = 0; i < 4; i++) {
-                // Config indices 5,6,7,8 for this tank
                 unsigned cfg = TANK_CONFIG + ((t*9 + (5+i)) * sizeof(vga_mode4_sprite_t));
                 xram0_struct_set(cfg, vga_mode4_sprite_t, x_pos_px, (screen_px + 4 + (i * 8)));
                 xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, (base_y_px - 8));
-                xram0_struct_set(cfg, vga_mode4_sprite_t, xram_sprite_ptr, get_tank_tile_ptr(turret_start_idx + i));
+                xram0_struct_set(cfg, vga_mode4_sprite_t, xram_sprite_ptr, get_tank_tile_ptr(turret_start + i));
             }
-
         } else {
-            // Off-screen: Hide all 9 sprites
+            // Offscreen hide
             for(int s=0; s<9; s++) {
                 unsigned cfg = TANK_CONFIG + ((t*9 + s) * sizeof(vga_mode4_sprite_t));
                 xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
