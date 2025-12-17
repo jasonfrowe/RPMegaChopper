@@ -217,7 +217,7 @@ extern unsigned GROUND_MAP_END;
 #define FRAME_RIGHT_BRAKE       18  // 18-19: Facing Right, Moving Left (Backwards)
 
 #define TURN_DURATION           15  // How many frames to hold before turning
-#define MAX_SPEED              (1 * ONE_PIXEL + 8) // Max horizontal speed (in subpixels)
+#define MAX_SPEED              (2 * ONE_PIXEL + 8) // Max horizontal speed (in subpixels)
 #define ACCEL_RATE              1       // 2/16ths pixel accel per frame
 #define FRICTION_RATE           1       // 1/16th pixel friction
 

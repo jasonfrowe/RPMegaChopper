@@ -47,6 +47,40 @@ uint16_t get_tank_tile_ptr(int index) {
 }
 
 void update_tanks(void) {
+
+    // --- DEBUG: TRACK INVENTORY ---
+    // static int debug_print_timer = 0;
+    // debug_print_timer++;
+    
+    // if (debug_print_timer > 60) { // Print once per second
+    //     debug_print_timer = 0;
+        
+    //     int b = get_closest_base_index();
+    //     int active_count = 0;
+        
+    //     // Count how many tanks are actually driving around right now
+    //     for(int t=0; t<NUM_TANKS; t++) {
+    //         if (tanks[t].active) active_count++;
+    //     }
+
+    //     if (b != -1) {
+    //         printf("DEBUG - Base %d | Garage: %d | Cooldown: %d | Active Tanks: %d | Triggered: %d\n", 
+    //                b, 
+    //                base_state[b].tanks_remaining, 
+    //                base_state[b].tank_cooldown, 
+    //                active_count,
+    //                tanks_triggered);
+    //     }
+    // }
+
+    // =========================================================
+    // 0. UPDATE BASE COOLDOWNS (The Missing Piece)
+    // =========================================================
+    for (int i = 0; i < NUM_ENEMY_BASES; i++) {
+        if (base_state[i].tank_cooldown > 0) {
+            base_state[i].tank_cooldown--;
+        }
+    }
     
     // =========================================================
     // 1. GLOBAL TRIGGER CHECK
@@ -177,7 +211,8 @@ void update_tanks(void) {
         int32_t base_x = ENEMY_BASE_LOCATIONS[tanks[t].base_id];
         int32_t dist_from_base = tanks[t].world_x - base_x;
         int32_t chop_cx = chopper_world_x + (16 << SUBPIXEL_BITS);
-        int32_t dist_to_chopper = chop_cx - tanks[t].world_x;
+        int32_t tank_cx = tanks[t].world_x + (20 << SUBPIXEL_BITS); 
+        int32_t dist_to_chopper = chop_cx - tank_cx;
 
         // 1. Basic Desire
         int8_t target_dir = (dist_to_chopper > 0) ? 1 : -1;
