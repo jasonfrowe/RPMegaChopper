@@ -74,7 +74,7 @@ void update_tank_bullets(void) {
         int32_t screen_sub = tanks[t].world_x - camera_x;
         int16_t screen_px = screen_sub >> SUBPIXEL_BITS;
 
-        if (screen_px > -TANK_WIDTH_PX && screen_px < SCREEN_WIDTH + TANK_WIDTH_PX) {
+        if (screen_px > -(TANK_WIDTH_PX - 20) && screen_px < SCREEN_WIDTH + (TANK_WIDTH_PX - 20)) {
             
             // Random Fire Chance (approx 1 per sec)
             if ((rand() % 100) < 2) { 
@@ -234,7 +234,7 @@ void update_tank_bullets(void) {
         int32_t screen_sub = tank_bullets[b].world_x - camera_x;
         int16_t screen_px = screen_sub >> SUBPIXEL_BITS;
 
-        if (screen_px > -20 && screen_px < 360) {
+        if (screen_px > -30 && screen_px < 370) {
             xram0_struct_set(cfg, vga_mode4_sprite_t, x_pos_px, screen_px);
             xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, tank_bullets[b].y >> SUBPIXEL_BITS);
         } else {

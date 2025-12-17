@@ -22,7 +22,7 @@ int16_t bullet_vx = 0;
 int16_t bullet_vy = 0;
 
 // Input tracking for semi-automatic fire
-bool fire_cooldown = 0;
+int player_fire_cooldown = 0;
 
 // Configuration
 #define BULLET_SPEED_X    (8 << SUBPIXEL_BITS) // Fast horizontal speed
@@ -31,12 +31,19 @@ bool fire_cooldown = 0;
 #define BULLET_GROUND     (GROUND_Y_SUB + (12 << SUBPIXEL_BITS)) // Ground level for bullets
 
 void update_bullet(void) {
+
+
+    if (player_fire_cooldown > 0) {
+        player_fire_cooldown--;
+    }
+
+
     bool fire_pressed = is_action_pressed(0, ACTION_FIRE);
 
     // -----------------------------------------------------------
     // 1. SPAWN LOGIC
     // -----------------------------------------------------------
-    if (fire_pressed && !fire_cooldown && !bullet_active && !is_landed) {
+    if (fire_pressed && player_fire_cooldown == 0 && !bullet_active && !is_landed) {
         
         bool can_fire = false;
 
@@ -83,6 +90,7 @@ void update_bullet(void) {
         if (can_fire) {
             bullet_active = true;
             bullet_y = chopper_y + BULLET_Y_OFFSET;
+            player_fire_cooldown = 20; // 20 frame cooldown
             play_sound(SFX_TYPE_PLAYER_FIRE, 110, PSG_WAVE_SQUARE, 0, 3, 4, 2);
         }
     }

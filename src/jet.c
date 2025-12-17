@@ -118,7 +118,7 @@ void update_jet(void) {
                 jet.y = GROUND_Y_SUB - (80 << SUBPIXEL_BITS); 
             } else {
                 // Interceptor flies at player altitude
-                jet.y = chopper_y + (16 << SUBPIXEL_BITS);
+                jet.y = chopper_y + (12 << SUBPIXEL_BITS);
             }
             
             // Reset timers
