@@ -97,7 +97,10 @@
 #define BOMB_DATA              (JET_DATA + JET_DATA_SIZE) // Bomb sprite data address
 #define BOMB_DATA_SIZE          0x0080U // Size of Bomb sprite data
 
-#define SPRITE_DATA_END        (BOMB_DATA + BOMB_DATA_SIZE) // End of used data area
+#define MINICHOPPER_DATA        (BOMB_DATA + BOMB_DATA_SIZE) // Mini Chopper sprite data address
+#define MINICHOPPER_DATA_SIZE   0x0080U // Size of Mini Chopper sprite data
+
+#define SPRITE_DATA_END        (MINICHOPPER_DATA + MINICHOPPER_DATA_SIZE) // End of used data area
 
 // Helper macros for navigating the Chopper frames
 // Each frame consists of a LEFT sprite and a RIGHT sprite
@@ -133,6 +136,7 @@ extern unsigned JET_RIGHT_CONFIG; // Jet Right Sprite Configuration
 extern unsigned BOMB_CONFIG; // Bomb Sprite Configuration
 extern unsigned JET_BULLET_CONFIG; // Jet Bullet Sprite Configuration
 extern unsigned JET_BOMB_CONFIG; // Jet Bomb Sprite Configuration
+extern unsigned MINICHOPPER_CONFIG; // Mini Chopper Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------
@@ -228,11 +232,5 @@ extern unsigned GROUND_MAP_END;
 #define GRAVITY_SPEED   8 // (1 << SUBPIXEL_BITS)   // Pixels per frame to fall when idle
 #define CLIMB_SPEED     (1 << SUBPIXEL_BITS)   // Pixels per frame to rise
 #define DIVE_SPEED      (2 << SUBPIXEL_BITS)   // Pixels per frame to force down
-
-// HUD Text Plane
-#define NTEXT 1
-#define MESSAGE_WIDTH 36
-#define MESSAGE_HEIGHT 2
-#define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT + 1) // +1 for null terminator
 
 #endif // CONSTANTS_H

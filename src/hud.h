@@ -1,7 +1,10 @@
 #ifndef HUD_H
 #define HUD_H
 
-    
+// HUD Text Plane
+#define MESSAGE_WIDTH 40
+#define MESSAGE_HEIGHT 15
+#define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT + 1) // +1 for null terminator
     
 // --- HUD CONSTANTS (ANSI 8-bit Palette) ---
 #define HUD_COL_BG      0   // Black / Transparent
@@ -21,6 +24,9 @@
 
 
 extern void update_hud(void);
+extern void update_lives_display(void);
+extern void clear_text_screen(void);
+extern void draw_text(uint8_t x, uint8_t y, const char* str, uint8_t color);
 
 extern char message[];
 

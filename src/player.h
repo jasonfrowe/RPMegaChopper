@@ -7,6 +7,8 @@
 // PLAYER MODULE
 // ============================================================================
 
+#define LIVES_STARTING     3
+
 #define FRAME_SPIN_LEFT  12
 #define FRAME_SPIN_RIGHT 18
 
@@ -20,6 +22,7 @@ extern uint16_t get_chopper_sprite_ptr(int frame_idx, int part);
 extern void update_chopper_animation(uint8_t frame);
 extern void update_chopper_state(void);
 extern void kill_player(void);
+extern void respawn_player(void);
 
 extern uint8_t base_frame;
 extern bool is_landed;
@@ -36,8 +39,11 @@ typedef enum {
 typedef enum {
     PLAYER_ALIVE,
     PLAYER_DYING_FALLING, // Spinning down
-    PLAYER_DYING_CRASHING // Exploding on ground
+    PLAYER_DYING_CRASHING, // Exploding on ground
+    PLAYER_WAITING_FOR_RESPAWN // New State
 } PlayerState;
+
+extern int lives; // Global lives counter
 
 extern PlayerState player_state;
 extern uint8_t death_timer;

@@ -26,6 +26,7 @@ rp6502_asset(RPMegaChopper 0x1DF88 images/Boom.bin)
 rp6502_asset(RPMegaChopper 0x1E388 images/Balloon.bin)
 rp6502_asset(RPMegaChopper 0x1EF88 images/Jet.bin)
 rp6502_asset(RPMegaChopper 0x1F188 images/Bomb.bin)
+rp6502_asset(RPMegaChopper 0x1F208 images/Minichopper.bin)
 rp6502_executable(RPMegaChopper
     Chopper.bin.rp6502
     Tiles_Ground.bin.rp6502
@@ -45,6 +46,7 @@ rp6502_executable(RPMegaChopper
     Balloon.bin.rp6502
     Jet.bin.rp6502
     Bomb.bin.rp6502
+    Minichopper.bin.rp6502
     DATA file
     RESET file
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.hlp

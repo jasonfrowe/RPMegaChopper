@@ -47,6 +47,7 @@ extern uint8_t hostages_on_board;
 extern uint8_t hostages_rescued_count;
 extern uint8_t hostages_lost_count;
 extern uint8_t hostages_total_spawned;
+extern uint8_t dropoff_timer;
 
 extern void update_hostages(void);
 extern void kill_all_passengers(void);

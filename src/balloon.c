@@ -23,6 +23,16 @@ uint16_t get_balloon_ptr(int frame, int part) {
     return BALLOON_DATA + ((base_idx + part) * 512);
 }
 
+void reset_balloon(void) {
+    balloon.active = false;
+    balloon.respawn_timer = 0; // Reset so it spawns when criteria are met
+    
+    // Hide Sprites
+    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+    xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+}
+
+
 void update_balloon(void) {
     int total_progress = hostages_total_spawned;
 

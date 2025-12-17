@@ -52,6 +52,7 @@ unsigned JET_RIGHT_CONFIG;          // Jet Right Sprite Configuration
 unsigned BOMB_CONFIG;               // Bomb Sprite Configuration
 unsigned JET_BULLET_CONFIG;         // Jet Bullet Sprite Configuration
 unsigned JET_BOMB_CONFIG;           // Jet Bomb Sprite Configuration
+unsigned MINICHOPPER_CONFIG;        // Mini Chopper Sprite Configuration
 
 
 static void init_graphics(void)
@@ -242,9 +243,19 @@ static void init_graphics(void)
     xram0_struct_set(JET_BOMB_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^2)
     xram0_struct_set(JET_BOMB_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 8, 2); // Enable sprites
+    MINICHOPPER_CONFIG = JET_BOMB_CONFIG + sizeof(vga_mode4_sprite_t);
+    for (int i = 0; i < LIVES_STARTING; i++) {
+        unsigned minichopper_cfg = MINICHOPPER_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+        xram0_struct_set(minichopper_cfg, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+        xram0_struct_set(minichopper_cfg, vga_mode4_sprite_t, y_pos_px, -16);
+        xram0_struct_set(minichopper_cfg, vga_mode4_sprite_t, xram_sprite_ptr, MINICHOPPER_DATA); // Mini Chopper sprite data
+        xram0_struct_set(minichopper_cfg, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3)
+        xram0_struct_set(minichopper_cfg, vga_mode4_sprite_t, has_opacity_metadata, false);
+    }
 
-    unsigned FOREGROUND_SPRITE_END = JET_BOMB_CONFIG + sizeof(vga_mode4_sprite_t);
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 8 + LIVES_STARTING, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = MINICHOPPER_CONFIG + (LIVES_STARTING * sizeof(vga_mode4_sprite_t));
 
 
     // -----------------------------------------------------
@@ -393,24 +404,20 @@ static void init_graphics(void)
     xregn(1, 0, 1, 4, 2, 10, GROUND_CONFIG, 0); // Enable sprite
 
     TEXT_CONFIG = GROUND_CONFIG + sizeof(vga_mode2_config_t);
-    text_message_addr = TEXT_CONFIG + NTEXT * sizeof(vga_mode1_config_t);
+    text_message_addr = TEXT_CONFIG + sizeof(vga_mode1_config_t);
     const unsigned bytes_per_char = 3; // we write 3 bytes per character into text RAM
     unsigned text_storage_end = text_message_addr + MESSAGE_LENGTH * bytes_per_char;
 
-    for (uint8_t i = 0; i < NTEXT; i++) {
 
-        unsigned ptr = TEXT_CONFIG + i * sizeof(vga_mode1_config_t);
-
-        xram0_struct_set(ptr, vga_mode1_config_t, x_wrap, 0);
-        xram0_struct_set(ptr, vga_mode1_config_t, y_wrap, 0);
-        xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 0); //Bug: first char duplicated if not set to zero
-        xram0_struct_set(ptr, vga_mode1_config_t, y_pos_px, 5);
-        xram0_struct_set(ptr, vga_mode1_config_t, width_chars, MESSAGE_WIDTH);
-        xram0_struct_set(ptr, vga_mode1_config_t, height_chars, MESSAGE_HEIGHT);
-        xram0_struct_set(ptr, vga_mode1_config_t, xram_data_ptr, text_message_addr);
-        xram0_struct_set(ptr, vga_mode1_config_t, xram_palette_ptr, 0xFFFF);
-        xram0_struct_set(ptr, vga_mode1_config_t, xram_font_ptr, 0xFFFF);
-    }
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, x_wrap, 0);
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, y_wrap, 0);
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, x_pos_px, 0); //Bug: first char duplicated if not set to zero
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, y_pos_px, 5);
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, width_chars, MESSAGE_WIDTH);
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, height_chars, MESSAGE_HEIGHT);
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, xram_data_ptr, text_message_addr);
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, xram_palette_ptr, 0xFFFF);
+    xram0_struct_set(TEXT_CONFIG, vga_mode1_config_t, xram_font_ptr, 0xFFFF);
 
     // 4 parameters: text mode, 8-bit, config, plane
     xregn(1, 0, 1, 4, 1, 3, TEXT_CONFIG, 2);
@@ -421,14 +428,11 @@ static void init_graphics(void)
     // Now write the MESSAGE_LENGTH characters into text RAM (3 bytes per char)
     RIA.addr0 = text_message_addr;
     RIA.step0 = 1;
-    for (uint8_t i = 0; i < MESSAGE_LENGTH; i++) {
+    for (uint16_t i = 0; i < MESSAGE_LENGTH; i++) {
         RIA.rw0 = ' ';
         RIA.rw0 = HUD_COL_WHITE;
         RIA.rw0 = HUD_COL_BG;
     }
-
-    printf("Next Free XRAM Address: 0x%04X\n", text_storage_end);
-
 
     printf("Chopper Data at 0x%04X\n", CHOPPER_DATA);
     printf("Ground Data at 0x%04X\n", GROUND_DATA);
@@ -478,6 +482,9 @@ static void init_graphics(void)
     printf("Ground Background Config at 0x%04X\n", GROUND_CONFIG);
     printf("TEXT_CONFIG=0x%X\n", TEXT_CONFIG);
     printf("Text Message Addr=0x%X\n", text_message_addr);
+
+     printf("Next Free XRAM Address: 0x%04X\n", text_storage_end);
+
     printf("  GAME_PAD_CONFIG=0x%X\n", GAMEPAD_INPUT);
     printf("  KEYBOARD_CONFIG=0x%X\n", KEYBOARD_INPUT);
     printf("  PSG_CONFIG=0x%X\n", PSG_XRAM_ADDR);
@@ -489,16 +496,31 @@ void init_game_logic(void) {
     hostages_rescued_count = 0;
     hostages_lost_count = 0;
     hostages_total_spawned = 0;
+    dropoff_timer = 0;
 
+    // 2. Reset Hostages & Clear Sprites
     for (int i = 0; i < NUM_HOSTAGES; i++) {
+        // Reset Logic
         hostages[i].state = H_STATE_INACTIVE;
+        hostages[i].world_x = 0; 
         hostages[i].y = GROUND_Y_SUB - (16 << SUBPIXEL_BITS);
+        
+        // --- FIX: CLEAR HARDWARE SPRITES ---
+        // Move them off-screen immediately so they don't linger
+        unsigned cfg = HOSTAGE_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+        xram0_struct_set(cfg, vga_mode4_sprite_t, x_pos_px, -32);
+        xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
     }
 
+    // 3. Reset Bases
     for (int i = 0; i < NUM_ENEMY_BASES; i++) {
         base_state[i].destroyed = false;
         base_state[i].hostages_remaining = HOSTAGES_PER_BASE;
-        base_state[i].tanks_remaining = 0; // Start at 0
+        base_state[i].spawn_timer = 0;
+        
+        // Reset Tank Inventory (if tracked here)
+        // Note: Actual tank activation logic handles the rest
+        base_state[i].tanks_remaining = 0; 
         base_state[i].tank_cooldown = 0;
     }
 
@@ -512,6 +534,15 @@ void init_game_logic(void) {
 
 }
 
+typedef enum {
+    STATE_TITLE,
+    STATE_PLAYING,
+    STATE_GAME_OVER
+} GameState;
+
+GameState game_state = STATE_TITLE;
+int game_over_timer = 0;
+int lives = LIVES_STARTING;
 
 uint8_t anim_timer = 0;
 
@@ -520,17 +551,20 @@ int main(void)
 
     puts("Hello from RPMegaChopper");
 
-    init_graphics();
-    init_game_logic();
-
     // Enable keyboard input
     xregn(0, 0, 0, 1, KEYBOARD_INPUT);
-    
     // Enable gamepad input
     xregn(0, 0, 2, 1, GAMEPAD_INPUT);
 
-    // Initialize input mappings (ensure `button_mappings` are set)
-    init_input_system();  // new function to set up input mappings
+    init_graphics();
+    init_game_logic();
+    init_input_system(); // Initialize input mappings (ensure `button_mappings` are set)
+
+    // Draw initial Title Screen
+    clear_text_screen();
+    draw_text(18, 5, "MEGA", HUD_COL_YELLOW);
+    draw_text(15, 7, "CHOPLIFTER", HUD_COL_RED);
+    draw_text(14, 11, "PRESS START", HUD_COL_WHITE);
 
     uint8_t vsync_last = RIA.vsync;
 
@@ -546,49 +580,109 @@ int main(void)
             continue;
         vsync_last = RIA.vsync;
 
-        // Update animation frames
-        anim_timer++;
-
         // Handle input
         handle_input();
 
-        // Update player state
-        update_chopper_state();
-        // Update clouds
-        update_clouds();
-        // Update landing pad
-        update_landing();
-        // Update home base
-        update_homebase();
-        // Update flags
-        update_flags();
-        // Update enemy base
-        update_enemybase();
-        // Update balloon 
-        update_balloon();
-        // Update bullets
-        update_bullet();
-        // Check bullet collisions
-        check_bullet_collisions();
-        // Update enemy bullets
-        update_tank_bullets();
-        // Update bombs
-        update_bomb();
-        // Update hostages
-        update_hostages();
-        // Update HUD
-        update_hud();
-        // Update explosion
-        update_explosion();
-        // Update small explosion
-        update_small_explosions();
-        // Update tanks
-        update_tanks();
-        // Update Jet
-        update_jet();
+        switch (game_state) {
+            
+            // --- TITLE SCREEN ---
+            case STATE_TITLE:
+                // Check Start Button
+                if (is_action_pressed(0, ACTION_PAUSE) || is_action_pressed(0, ACTION_FIRE)) {
+                    
+                    // Reset Game
+                    init_game_logic(); // Resets hostages, bases, etc.
 
-        // Render the game
-        // render_game();
+                    // 2. Enemy Resets 
+                    reset_tanks();
+                    reset_tank_bullets();
+                    reset_jet();
+                    reset_balloon();
+
+                    lives = LIVES_STARTING;
+                    respawn_player();  // Moves chopper to start
+                    
+                    // Clear Title Text
+                    clear_text_screen();
+                    
+                    game_state = STATE_PLAYING;
+                }
+                break;
+
+            // --- PLAYING ---
+            case STATE_PLAYING:
+
+                // Update animation frames
+                anim_timer++;
+
+                // Update player state
+                update_chopper_state();
+                // Update clouds
+                update_clouds();
+                // Update landing pad
+                update_landing();
+                // Update home base
+                update_homebase();
+                // Update flags
+                update_flags();
+                // Update enemy base
+                update_enemybase();
+                // Update balloon 
+                update_balloon();
+                // Update bullets
+                update_bullet();
+                // Check bullet collisions
+                check_bullet_collisions();
+                // Update enemy bullets
+                update_tank_bullets();
+                // Update bombs
+                update_bomb();
+                // Update hostages
+                update_hostages();
+                // Update explosion
+                update_explosion();
+                // Update small explosion
+                update_small_explosions();
+                // Update tanks
+                update_tanks();
+                // Update Jet
+                update_jet();
+
+                // Update HUD
+                update_hud();
+                update_lives_display(); // Show remaining lives
+
+                // 3. Check Life Loss
+                if (player_state == PLAYER_WAITING_FOR_RESPAWN) {
+                    lives--;
+                    
+                    if (lives > 0) {
+                        respawn_player(); // Reset pos, keep score
+                    } else {
+                        game_state = STATE_GAME_OVER;
+                        game_over_timer = 0;
+                        
+                        // Draw "GAME OVER" in center
+                        draw_text(15, 7, "GAME OVER", HUD_COL_RED);
+                    }
+                }
+                break;
+
+            // --- GAME OVER ---
+            case STATE_GAME_OVER:
+                game_over_timer++;
+                // Wait 5 seconds (300 frames) then return to title
+                if (game_over_timer > 300) {
+                    game_state = STATE_TITLE;
+                    
+                    clear_text_screen();
+                    draw_text(18, 5, "MEGA", HUD_COL_YELLOW);
+                    draw_text(15, 7, "CHOPLIFTER", HUD_COL_RED);
+                    draw_text(14, 11, "PRESS START", HUD_COL_WHITE);
+                }
+                break;
+        }
+
 
         // Check for ESC key to exit
         if (key(KEY_ESC)) {

@@ -10,5 +10,6 @@
 #define TANK_BULLET_SPEED_X     (2 << SUBPIXEL_BITS)       // Horizontal speed
 
 extern void update_tank_bullets(void);
+extern void reset_tank_bullets(void);
 
 #endif // EBULLETS_H

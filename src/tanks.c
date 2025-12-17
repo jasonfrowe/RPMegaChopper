@@ -46,6 +46,23 @@ uint16_t get_tank_tile_ptr(int index) {
     return TANK_DATA + (index * 128);
 }
 
+void reset_tanks(void) {
+    // 1. Reset Global Logic
+    tanks_triggered = false;
+    tank_spawn_timer = 0;
+
+    // 2. Clear Active Tanks & Sprites
+    for (int t = 0; t < NUM_TANKS; t++) {
+        tanks[t].active = false;
+        
+        // Hide all 9 sprites for this tank
+        for (int s = 0; s < 9; s++) {
+            unsigned cfg = TANK_CONFIG + ((t * 9 + s) * sizeof(vga_mode4_sprite_t));
+            xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
+        }
+    }
+}
+
 void update_tanks(void) {
 
     // --- DEBUG: TRACK INVENTORY ---

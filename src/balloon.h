@@ -21,5 +21,6 @@ typedef struct {
 extern Balloon balloon;
 
 void update_balloon(void);
+void reset_balloon(void);
 
 #endif // BALLOON_H

@@ -317,7 +317,8 @@ void update_chopper_state(void) {
     else if (player_state == PLAYER_DYING_CRASHING) {
         death_timer++;
         if (death_timer > 60) {
-            respawn_player();
+            // respawn_player();
+            player_state = PLAYER_WAITING_FOR_RESPAWN;
         }
     }
 

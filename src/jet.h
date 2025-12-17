@@ -10,7 +10,7 @@
 // Triggers
 #define JET_MIN_PROGRESS    24
 #define TIMER_GROUND_MAX    120 // 2 Seconds
-#define TIMER_AIR_MAX       180 // 3 Seconds
+#define TIMER_AIR_MAX       240 // 4 Seconds
 #define AIR_ZONE_Y          (75 << SUBPIXEL_BITS) // Top 75 pixels
 
 extern void update_jet(void);

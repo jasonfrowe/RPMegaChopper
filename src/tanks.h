@@ -47,5 +47,6 @@ extern const int32_t TANK_SPAWNS[];
 extern bool tanks_triggered;
 
 extern void update_tanks(void);
+extern void reset_tanks(void);
 
 #endif // TANKS_H

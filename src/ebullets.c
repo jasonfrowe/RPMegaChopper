@@ -46,6 +46,15 @@ TankBullet tank_bullets[NEBULLET];
 
 #define EBULLET_GROUND  (GROUND_Y_SUB + (14 << SUBPIXEL_BITS)) // Ground level for enemy bullets
 
+void reset_tank_bullets(void) {
+    for (int i = 0; i < NEBULLET; i++) {
+        tank_bullets[i].active = false;
+        
+        unsigned cfg = EBULLET_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+        xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
+    }
+}
+
 void update_tank_bullets(void) {
     
     // =========================================================
