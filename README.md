@@ -1,6 +1,7 @@
 # 🚁🇨🇦 **RPMegaChopper** 🇨🇦🚁
 ### *Rescue the Hostages, Eh? Blast Tanks with Maple Fury on the RP6502 Picocomputer!*
 
+![RPMegaChopper Gameplay GIF](images/gameplay.gif
 
 **RPMegaChopper** is a **proud Canadian homage** to Dan Gorlin's legendary *Choplifter* – rebuilt from the rotors up for the badass [RP6502 Picocomputer](https://picocomputer.github.io/). Fly behind enemy lines in your **Mountie-marked chopper**, rescue 64 brave hostages from 4 fortified POW camps, and show those tanks, anti-air balloons, and fighter jets what a polite "sorry" sounds like... followed by a **BOOM**! 💥🗺️
 
