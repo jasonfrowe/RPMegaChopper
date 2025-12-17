@@ -464,7 +464,6 @@ static void init_graphics(void)
     printf("Bomb Sprite Config at 0x%04X\n", BOMB_CONFIG);
     printf("Jet Bullet Sprite Config at 0x%04X\n", JET_BULLET_CONFIG);
     printf("Jet Bomb Sprite Config at 0x%04X\n", JET_BOMB_CONFIG);
-    printf("Ground Map Start at 0x%04X\n", GROUND_MAP_START);
     printf("CLOUD_A_CONFIG=0x%X\n", CLOUD_A_CONFIG);
     printf("CLOUD_B_CONFIG=0x%X\n", CLOUD_B_CONFIG);
     printf("CLOUD_C_CONFIG=0x%X\n", CLOUD_C_CONFIG);
@@ -473,6 +472,7 @@ static void init_graphics(void)
     printf("ENEMYBASE_CONFIG=0x%X\n", ENEMYBASE_CONFIG);
     printf("FLAGS_CONFIG=0x%X\n", FLAGS_CONFIG);
     printf("END OF SPRITES=0x%X\n", END_OF_SPRITES);
+    printf("Ground Map Start at 0x%04X\n", GROUND_MAP_START);
     printf("Ground Map End at 0x%04X\n", GROUND_MAP_END);
     printf("Ground Background Config at 0x%04X\n", GROUND_CONFIG);
     printf("TEXT_CONFIG=0x%X\n", TEXT_CONFIG);
