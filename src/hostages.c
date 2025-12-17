@@ -16,6 +16,7 @@ Hostage hostages[NUM_HOSTAGES];
 uint8_t hostages_on_board = 0;
 uint8_t hostages_rescued_count = 0;
 uint8_t dropoff_timer = 0;
+uint8_t hostages_total_spawned = 0;
 
 // Game stats
 uint8_t hostages_lost_count = 0;
@@ -78,6 +79,7 @@ void update_hostages(void) {
                         hostages[h].anim_frame = 8;
                         hostages[h].direction = 0;
                         base_state[i].hostages_remaining--;
+                        hostages_total_spawned++;
                         break;
                     }
                 }

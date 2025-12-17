@@ -10,6 +10,7 @@
 #include "explosion.h"
 #include "smallexplosion.h"
 #include <stdlib.h>
+#include "balloon.h"
 
 // --- BULLET STATE ---
 bool bullet_active = false;
@@ -124,6 +125,46 @@ void update_bullet(void) {
 
 void check_bullet_collisions(void) {
     if (!bullet_active) return;
+
+    // -----------------------------------------------------------
+    // 3. CHECK BALLOON
+    // -----------------------------------------------------------
+    // -----------------------------------------------------------
+    // 3. CHECK BALLOON
+    // -----------------------------------------------------------
+    if (balloon.active) {
+        
+        // 1. Calculate Centers
+        // Balloon World X is Left Edge. Width is 16px. Center is +8px.
+        int32_t balloon_cx = balloon.world_x + (8 << SUBPIXEL_BITS);
+
+        // Balloon Y is Bottom Edge. Height is 32px. Center is +16px (Down).
+        int32_t balloon_cy = balloon.y + (0 << SUBPIXEL_BITS);
+
+        // 2. Horizontal Check
+        // Width is 16px. Half-width is 8px.
+        // We use 10px threshold for a slightly generous hitbox.
+        if (labs(bullet_world_x - balloon_cx) < (10 << SUBPIXEL_BITS)) {
+            
+            // 3. Vertical Check
+            // Height is 32px. Half-height is 16px.
+            // Using 16px threshold covers the full height exactly with bullet center.
+            if (labs(bullet_y - balloon_cy) < (18 << SUBPIXEL_BITS)) {
+                
+                // --- HIT! ---
+                balloon.active = false;
+                balloon.respawn_timer = BALLOON_RESPAWN; // 5 sec cooldown
+                
+                bullet_active = false;
+                xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+
+                // Big Explosion centered on the balloon
+                trigger_explosion(balloon.world_x, balloon_cy);
+                
+                return;
+            }
+        }
+    }
 
     // -----------------------------------------------------------
     // CHECK ENEMY BASES

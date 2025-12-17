@@ -66,4 +66,5 @@ target_sources(RPMegaChopper PRIVATE
     src/tanks.c
     src/ebullets.c
     src/bomb.c
+    src/balloon.c
 )

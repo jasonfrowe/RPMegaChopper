@@ -18,6 +18,7 @@
 #include "tanks.h"
 #include "ebullets.h"
 #include "bomb.h"
+#include "balloon.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -43,9 +44,12 @@ unsigned SMALL_EXPLOSION_CONFIG;    // Small Explosion Sprite Configuration
 unsigned TANK_CONFIG;               // Tank Sprite Configuration
 unsigned EBULLET_CONFIG;            // Enemy Bullet Sprite Configuration
 unsigned BOOM_CONFIG;               // Boom Sprite Configuration
-unsigned BALLOON_CONFIG;            // Balloon Sprite Configuration
+unsigned BALLOON_BOTTOM_CONFIG;      // Balloon Bottom Sprite Configuration
+unsigned BALLOON_TOP_CONFIG;         // Balloon Top Sprite Configuration
 unsigned JET_CONFIG;                // Jet Sprite Configuration
 unsigned BOMB_CONFIG;               // Bomb Sprite Configuration
+unsigned JET_BULLET_CONFIG;         // Jet Bullet Sprite Configuration
+unsigned JET_BOMB_CONFIG;           // Jet Bomb Sprite Configuration
 
 
 static void init_graphics(void)
@@ -188,14 +192,20 @@ static void init_graphics(void)
     xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
     xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    BALLOON_CONFIG = BOOM_CONFIG + sizeof(vga_mode4_sprite_t);
-    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
-    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
-    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BALLOON_DATA); // Balloon sprite data
-    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
-    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+    BALLOON_BOTTOM_CONFIG = BOOM_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (BALLOON_DATA + 1024)); // Balloon sprite data
+    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
+    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    JET_CONFIG = BALLOON_CONFIG + sizeof(vga_mode4_sprite_t);
+    BALLOON_TOP_CONFIG = BALLOON_BOTTOM_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (BALLOON_DATA + 1024)); // Balloon sprite data
+    xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
+
+    JET_CONFIG = BALLOON_TOP_CONFIG + sizeof(vga_mode4_sprite_t);
     xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
     xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
     xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, JET_DATA); // Jet sprite data
@@ -209,7 +219,7 @@ static void init_graphics(void)
     xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3) 
     xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 4, 2); // Enable sprites
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 5, 2); // Enable sprites
 
     unsigned FOREGROUND_SPRITE_END = BOMB_CONFIG + sizeof(vga_mode4_sprite_t);
 
@@ -423,6 +433,8 @@ static void init_graphics(void)
 void init_game_logic(void) {
     hostages_on_board = 0;
     hostages_rescued_count = 0;
+    hostages_lost_count = 0;
+    hostages_total_spawned = 0;
 
     for (int i = 0; i < NUM_HOSTAGES; i++) {
         hostages[i].state = H_STATE_INACTIVE;
@@ -440,6 +452,9 @@ void init_game_logic(void) {
     for (int t = 0; t < NUM_TANKS; t++) {
         tanks[t].active = false;
     }
+
+    // 4. Update Register 5 Count
+    // Previous Count + 2
 
 }
 
@@ -495,6 +510,8 @@ int main(void)
         update_flags();
         // Update enemy base
         update_enemybase();
+        // Update balloon 
+        update_balloon();
         // Update bullets
         update_bullet();
         // Check bullet collisions
