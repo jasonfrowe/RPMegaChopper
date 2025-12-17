@@ -21,6 +21,7 @@
 #include "balloon.h"
 #include "jet.h"
 #include "sound.h"
+#include "music.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -561,6 +562,7 @@ int main(void)
     init_game_logic();
     init_input_system(); // Initialize input mappings (ensure `button_mappings` are set)
     init_psg(); // Initialize PSG sound system
+    init_music(); // Initialize music system
 
     // Draw initial Title Screen
     clear_text_screen();
@@ -568,6 +570,7 @@ int main(void)
     draw_text(14, 7, "CHOPLIFTER", HUD_COL_RED);
     draw_text(13, 12, "PRESS  START", HUD_COL_WHITE);
 
+    start_title_music();
 
     uint8_t vsync_last = RIA.vsync;
 
@@ -587,10 +590,10 @@ int main(void)
         handle_input();
 
         switch (game_state) {
-            
             // --- TITLE SCREEN ---
             case STATE_TITLE:
                 // Check Start Button
+                update_music();
                 if (is_action_pressed(0, ACTION_PAUSE) || is_action_pressed(0, ACTION_FIRE)) {
                     
                     // Reset Game
@@ -609,6 +612,7 @@ int main(void)
                     clear_text_screen();
                     
                     game_state = STATE_PLAYING;
+                    stop_music();
                 }
                 break;
 
@@ -690,15 +694,21 @@ int main(void)
 
             // --- GAME OVER ---
             case STATE_GAME_OVER:
+                if (game_over_timer == 0) {
+                    start_end_music();
+                }
+                update_music();
                 game_over_timer++;
-                // Wait 5 seconds (300 frames) then return to title
-                if (game_over_timer > 300) {
+                // Wait 10 seconds (600 frames) then return to title
+                if (game_over_timer > 600) {
+                    stop_music();
                     game_state = STATE_TITLE;
                     
                     clear_text_screen();
                     draw_text(18, 5, "MEGA", HUD_COL_YELLOW);
                     draw_text(15, 7, "CHOPLIFTER", HUD_COL_RED);
                     draw_text(14, 11, "PRESS START", HUD_COL_WHITE);
+                    start_title_music();
                 }
                 break;
         }

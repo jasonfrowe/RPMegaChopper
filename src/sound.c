@@ -2,13 +2,14 @@
 #include "constants.h"
 #include <rp6502.h>
 #include <stdint.h>
+#include <stdio.h>
 
 // ============================================================================
 // MODULE STATE
 // ============================================================================
 
 // Channel allocation (2 channels per effect type for round-robin)
-static uint8_t next_channel[SFX_TYPE_COUNT] = {0, 2};
+static uint8_t next_channel[SFX_TYPE_COUNT] = {0, 0, 0, 0};
 
 // ============================================================================
 // INTERNAL FUNCTIONS
@@ -24,6 +25,11 @@ static void stop_sound(uint8_t channel)
     uint16_t psg_addr = PSG_XRAM_ADDR + (channel * 8) + 6;  // pan_gate offset
     RIA.addr0 = psg_addr;
     RIA.rw0 = 0x00;  // Gate off (release)
+
+    // Tiny delay: ~50–100 cycles ≈ 15–30 µs (safe, <1 audio sample)
+    // Start small; increase if still unreliable
+    volatile uint8_t delay = 40;  // Adjust 20–80 based on testing
+    while (delay--) ;
 }
 
 // ============================================================================
@@ -48,17 +54,28 @@ void play_sound(uint8_t sfx_type, uint16_t freq, uint8_t wave,
 {
     if (sfx_type >= SFX_TYPE_COUNT) return;
     
-    // Get base channel for this effect type (each type has 2 channels)
     uint8_t base_channel = sfx_type * 2;
-    uint8_t channel = base_channel + next_channel[sfx_type];
-    
-    // Release the previous sound on the old channel
-    uint8_t old_channel = base_channel + (1 - next_channel[sfx_type]);
+    uint8_t channel;
+    uint8_t old_channel;
+
+    if (sfx_type == SFX_TYPE_EVENT) {
+        // Special case: Single channel (6), no round-robin
+        channel = 6;
+        old_channel = 6;  // Stop the current/previous event on the same channel
+    } else {
+        // Normal round-robin for other types
+        channel = base_channel + next_channel[sfx_type];
+        old_channel = base_channel + (1 - next_channel[sfx_type]);
+    }
+
+    // Release the previous sound
     stop_sound(old_channel);
-    
-    // Toggle to next channel for this effect type
-    next_channel[sfx_type] = 1 - next_channel[sfx_type];
-    
+
+    // Toggle only for non-event types
+    if (sfx_type != SFX_TYPE_EVENT) {
+        next_channel[sfx_type] = 1 - next_channel[sfx_type];
+    }
+
     uint16_t psg_addr = PSG_XRAM_ADDR + (channel * 8);
     
     // Set frequency (Hz * 3)
@@ -112,22 +129,23 @@ void sfx_explosion_large(void) {
 }
 
 void sfx_bomb_drop(void) {
-    // High pitch "whistle" before impact.
-    // Sawtooth gives a mechanical sound.
-    // Freq 2000, Saw, A:4 (Slide in), D:10, R:4, Vol: 4
-    play_sound(SFX_TYPE_EVENT, 1000, PSG_WAVE_SAWTOOTH, 4, 10, 4, 4);
+    // Classic falling bomb whistle — call every frame with decreasing freq
+    // Moderate volume, quick decay → clean descending tone
+    play_sound(SFX_TYPE_EVENT, 1200, PSG_WAVE_SAWTOOTH, 0, 5, 4, 3);
+    // decay_rate 5 → ~168 ms tail — enough for whistle feel, cuts cleanly
+    // volume 3 → solid loudness without harshness
 }
 
 void sfx_hostage_rescue(void) {
-    // Positive "Ding".
-    // Freq 1500, Sine/Square, A:0, D:8, R:8, Vol: 4
-    play_sound(SFX_TYPE_EVENT, 1500, PSG_WAVE_SQUARE, 0, 8, 8, 4);
+    // Happy short ding
+    play_sound(SFX_TYPE_EVENT, 1500, PSG_WAVE_SQUARE, 0, 4, 4, 2);
+    // decay 4 → ~114 ms, quick bright blip
 }
 
 void sfx_hostage_die(void) {
-    // Sad, low square wave.
-    // Freq 150, Square, A:2, D:10, R:10, Vol: 4
-    play_sound(SFX_TYPE_EVENT, 150, PSG_WAVE_SQUARE, 2, 10, 10, 4);
+    // Low, somber tone — slightly longer tail
+    play_sound(SFX_TYPE_EVENT, 200, PSG_WAVE_SQUARE, 0, 7, 6, 4);
+    // decay 7 → ~240 ms fade, gives a mournful feel without dragging
 }
 
 // --- ENGINE STATE ---
@@ -136,7 +154,7 @@ static uint16_t current_engine_vol = 0;
 
 #define ENG_CHAN        7
 #define ENG_BASE_FREQ   80  // Low rumble
-#define ENG_BASE_VOL    8   // 0 is Loud, 15 is Silent. 8 is mid-volume.
+#define ENG_BASE_VOL    10   // 0 is Loud, 15 is Silent. 8 is mid-volume.
 
 void update_chopper_sound(uint16_t velocity_mag) {
     uint16_t psg_addr = PSG_XRAM_ADDR + (ENG_CHAN * 8);

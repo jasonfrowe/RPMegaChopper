@@ -71,4 +71,5 @@ target_sources(RPMegaChopper PRIVATE
     src/balloon.c
     src/jet.c
     src/sound.c
+    src/music.c
 )
