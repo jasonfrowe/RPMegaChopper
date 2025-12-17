@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "balloon.h"
 #include "jet.h"
+#include "sound.h"
 
 // --- BULLET STATE ---
 bool bullet_active = false;
@@ -82,6 +83,7 @@ void update_bullet(void) {
         if (can_fire) {
             bullet_active = true;
             bullet_y = chopper_y + BULLET_Y_OFFSET;
+            play_sound(SFX_TYPE_PLAYER_FIRE, 110, PSG_WAVE_SQUARE, 0, 3, 4, 2);
         }
     }
 

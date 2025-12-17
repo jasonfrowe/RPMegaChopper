@@ -198,6 +198,7 @@ void update_tanks(void) {
                 
                 base_state[b].tanks_remaining--;
                 tank_spawn_timer = 60; // Wait 1 second before trying next spawn
+                tanks[free_slot].fire_cooldown = 20; // 60 + (rand() % 60);
             }
         }
     }

@@ -9,6 +9,7 @@
 #include "ebullets.h"
 #include "smallexplosion.h"
 #include "hostages.h"
+#include "sound.h"
 
 // --- TANK AIMING TABLES ---
 // Speed approx 4.5 pixels/frame (72 subpixels)
@@ -62,6 +63,12 @@ void update_tank_bullets(void) {
     // =========================================================
     for (int t = 0; t < NUM_TANKS; t++) {
         if (!tanks[t].active) continue;
+
+        // --- Decrement Cooldown ---
+        if (tanks[t].fire_cooldown > 0) {
+            tanks[t].fire_cooldown--;
+            continue; // Cannot fire yet
+        }
 
         // Check Visibility
         int32_t screen_sub = tanks[t].world_x - camera_x;
@@ -131,6 +138,10 @@ void update_tank_bullets(void) {
                         } else {
                             tank_bullets[b].vx = -VELOCITY_FACTOR * TANK_AIM_VX[aim_idx]; // Fire Left
                         }
+
+                        tanks[t].fire_cooldown = 30 + (rand() % 30); // 0.5 - 1 sec cooldown
+
+                        play_sound(SFX_TYPE_ENEMY_FIRE, 440, PSG_WAVE_TRIANGLE, 0, 4, 3, 3);
 
                         break; // Fired!
                     }
@@ -223,7 +234,7 @@ void update_tank_bullets(void) {
         int32_t screen_sub = tank_bullets[b].world_x - camera_x;
         int16_t screen_px = screen_sub >> SUBPIXEL_BITS;
 
-        if (screen_px > -4 && screen_px < 324) {
+        if (screen_px > -20 && screen_px < 360) {
             xram0_struct_set(cfg, vga_mode4_sprite_t, x_pos_px, screen_px);
             xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, tank_bullets[b].y >> SUBPIXEL_BITS);
         } else {

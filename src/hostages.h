@@ -2,6 +2,7 @@
 #define HOSTAGES_H
 
 // Hostages
+#define TOTAL_HOSTAGES  64  // This should be NUM_ENEMY_BASES * HOSTAGES_PER_BASE
 #define NUM_HOSTAGES    16
 #define HOSTAGES_PER_BASE 16
 #define HOSTAGE_RUN_SPEED 8 // (1 << SUBPIXEL_BITS) // 1 pixel per frame

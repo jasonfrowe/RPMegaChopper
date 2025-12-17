@@ -40,6 +40,7 @@ typedef struct {
     TurretDir turret_dir;   
     int health;
     uint8_t base_id;        // NEW: Which base does this tank belong to?
+    uint8_t fire_cooldown; // Frames until next shot
 } Tank;
 
 extern Tank tanks[];

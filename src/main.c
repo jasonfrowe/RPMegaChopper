@@ -20,6 +20,7 @@
 #include "bomb.h"
 #include "balloon.h"
 #include "jet.h"
+#include "sound.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -559,11 +560,12 @@ int main(void)
     init_graphics();
     init_game_logic();
     init_input_system(); // Initialize input mappings (ensure `button_mappings` are set)
+    init_psg(); // Initialize PSG sound system
 
     // Draw initial Title Screen
     clear_text_screen();
-    draw_text(18, 5, "MEGA", HUD_COL_YELLOW);
-    draw_text(15, 7, "CHOPLIFTER", HUD_COL_RED);
+    draw_text(17, 5, "MEGA", HUD_COL_YELLOW);
+    draw_text(14, 7, "CHOPLIFTER", HUD_COL_RED);
     draw_text(14, 11, "PRESS START", HUD_COL_WHITE);
 
     uint8_t vsync_last = RIA.vsync;
@@ -652,18 +654,35 @@ int main(void)
                 update_hud();
                 update_lives_display(); // Show remaining lives
 
-                // 3. Check Life Loss
+                // 3. CHECK END GAME CONDITIONS
+                
+                // Condition A: Ran out of lives (Existing)
                 if (player_state == PLAYER_WAITING_FOR_RESPAWN) {
                     lives--;
-                    
                     if (lives > 0) {
-                        respawn_player(); // Reset pos, keep score
+                        respawn_player();
                     } else {
                         game_state = STATE_GAME_OVER;
                         game_over_timer = 0;
-                        
-                        // Draw "GAME OVER" in center
                         draw_text(15, 7, "GAME OVER", HUD_COL_RED);
+                    }
+                }
+
+                // Condition B: Ran out of Hostages (New)
+                // If every hostage is accounted for (either dead or safe)
+                if ((hostages_rescued_count + hostages_lost_count) >= TOTAL_HOSTAGES) {
+                    game_state = STATE_GAME_OVER;
+                    game_over_timer = 0;
+
+                    // Display Result
+                    // If you saved more than half, it's a win!
+                    if (hostages_rescued_count > hostages_lost_count) {
+                        draw_text(12, 7, "MISSION COMPLETE", HUD_COL_GREEN);
+                        
+                        // Optional: Show score
+                        // draw_text(14, 9, "EXCELLENT JOB", HUD_COL_WHITE);
+                    } else {
+                        draw_text(13, 7, "MISSION FAILED", HUD_COL_RED);
                     }
                 }
                 break;
