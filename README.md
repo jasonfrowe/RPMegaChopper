@@ -1,66 +1,55 @@
-# RPMegaChopper
+# 🚁🇨🇦 **RPMegaChopper** 🇨🇦🚁
+### *Rescue the Hostages, Eh? Blast Tanks with Maple Fury on the RP6502 Picocomputer!*
 
-**RPMegaChopper** is a clone of the classic game *Choplifter*, developed for the [Picocomputer 6502 (RP6502)](https://picocomputer.github.io).
 
-## Gameplay
+**RPMegaChopper** is a **proud Canadian homage** to Dan Gorlin's legendary *Choplifter* – rebuilt from the rotors up for the badass [RP6502 Picocomputer](https://picocomputer.github.io/). Fly behind enemy lines in your **Mountie-marked chopper**, rescue 64 brave hostages from 4 fortified POW camps, and show those tanks, anti-air balloons, and fighter jets what a polite "sorry" sounds like... followed by a **BOOM**! 💥🗺️
 
-Command your helicopter behind enemy lines! Your mission is to rescue hostages being held in prisoner of war camps. 
+You're not just a pilot – you're **Captain Tim Hortons**, the Great White North's deadliest rescuer. Armed with **double-double firepower** and **poutine-powered precision**, you'll hover, rotate, bomb, and bullet your way to glory. *Eh? Who's ready to save the day?*
 
-- **Fly**: Navigate your chopper through hostile territory.
-- **Rescue**: Land near the barracks to pick up hostages.
-- **Return**: Transport them safely to the US base.
-- **Survive**: Avoid or destroy enemy tanks and jet fighters.
+## 🎮 **Gameplay: Heroic Hostage Havoc**
+Command your chopper through scrolling deserts, dodging enemy fire while:
+- **Rescuing Hostages**: Land near the barracks in each of the **4 enemy bases** (16 hostages per camp – **64 total**!). Pick 'em up and fly 'em home to the US base.
+- **Blasting Foes**:
+  - **Tanks** rumble below – take 'em out before they shell you!
+  - **Anti-air balloons** float up to pop your rotors.
+  - **Fighter jets** scream in from the sides – dogfight like a true Canuck ace!
+- **Fuel & Lives**: Grab fuel dumps, manage your tank, and survive the gauntlet. Lose too many hostages? Game over, buddy.
 
-## Development
+**Inspired by the Atari 7800 classic** – tight controls, non-stop action, and that floaty chopper feel that keeps you on the edge!
 
-This project uses the [LLVM-MOS](https://llvm-mos.org/) compiler suite and CMake for the build system.
+## 🕹️ **Controls: Simple, Deadly, Canadian**
+| Action          | Button/Control                  |
+|-----------------|---------------------------------|
+| **Fire**        | Button 1 – **Bullets sideways**, **bombs forward**! |
+| **Rotate**      | Button 2 – Face left/right to strafe-shoot, forward to bomb-drop & hover. |
+| **Fly**         | Joystick/D-pad – Up/down for altitude, left/right to scroll the map. |
 
-### Prerequisites
+*Pro Move*: Hover forward-facing over tanks for **bomb payloads**. Strafe sideways for bullet barrages. You're untouchable, eh?
 
-1.  **LLVM-MOS SDK**: Ensure you have the LLVM-MOS SDK installed and available in your path (or configured in CMake presets).
-2.  **CMake**: Version 3.18 or higher.
-3.  **Python 3**: Required for the asset conversion tools and upload scripts.
-4.  **Python Libraries**: `pyserial` and `Pillow` (for image processing).
-    ```bash
-    pip install pyserial Pillow
-    ```
+## ⭐ **Features**
+- **64 Hostages Across 4 Bases** – Full campaign, just like the 7800 original!
+- **Smooth RP6502 Graphics & PSG Sound** – Crisp sprites, chopper rotors whirring, explosions that go **KA-BLOOEY**!
+- **Enemies Galore**: Tanks, balloons, jets – plus fuel management for replayability.
+- **Canadian Flair**: Secret power-up? **Maple Syrup Shields** (okay, maybe next update). Hero text: *"Sorry 'bout the mess!"*
+- **Tiny Footprint**: Runs buttery-smooth on your [Picocomputer 6502](https://picocomputer.github.io/) – real 6502 power!
 
-### Building
+## 🛠️ **Build & Play**
+1. Clone this repo: `git clone https://github.com/YOURUSERNAME/RPMegaChopper`
+2. Assemble with your RP6502 toolchain (cc6502 or similar).
+3. Flash to your Picocomputer via UF2 or serial.
+4. Boot up, grab a double-double, and **RESCUE!**
 
-This project is configured with CMake presets.
+Need hardware? Grab a [Picocomputer 6502 kit](https://www.tindie.com/products/rumbledethumps/picocomputer-6502/) and join the retro revolution.
 
-1.  **Configure**:
-    ```bash
-    cmake --preset jason-local
-    ```
-    *(Note: You may need to adjust `CMakeUserPresets.json` to point to your specific LLVM-MOS installation path.)*
+## 🇨🇦 **Why Canadian?**
+Because the author hails from the True North – strong and free! Expect polite explosions, moose cameos (maybe), and victory screens with hockey sticks. *Take off, eh!*
 
-2.  **Build**:
-    ```bash
-    cmake --build build
-    ```
+## 🙌 **Credits**
+- **Original Game**: *Choplifter* by **Dan Gorlin** (Apple II legend, 1982).
+- **Platform**: [RP6502 Picocomputer](https://picocomputer.github.io/) by **Rumbledethumps** – the heart of 6502 revival.
+- **This Clone**: Coded with ❤️, maple syrup, and poutine by [Your Name], Canada's Finest 6502 Pilot™.
 
-### Running
+**Star this repo if you rescue even one hostage!** 🌟  
+**Issues? PRs?** Open 'em – let's make it the best Choplifter clone since the 7800.  
 
-Connect your RP6502 via USB.
-
-```bash
-./tools/rp6502.py run build/RPMegaChopper.rp6502
-```
-
-### Asset Pipeline
-
-Graphics are stored in the `Sprites/` directory as PNG files. They are converted into RP6502-compatible binary formats using the `Sprites/convert_sprite.py` script.
-
-- **Sprites**: Converted to 16-bit RGB555 format (with alpha transparency).
-- **Tiles**: Converted to 4-bit IRGB format.
-
-Example conversion:
-```bash
-python3 Sprites/convert_sprite.py Sprites/Chopper.png -o images/Chopper.bin --mode sprite
-```
-
-## Credits
-
-- Original *Choplifter* game by Dan Gorlin.
-- RP6502 Platform by Rumbledethumps.
+*RPMegaChopper: Because every hero needs a chopper... and a side of fries!* 🍟🚁
