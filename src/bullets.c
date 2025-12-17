@@ -11,6 +11,7 @@
 #include "smallexplosion.h"
 #include <stdlib.h>
 #include "balloon.h"
+#include "jet.h"
 
 // --- BULLET STATE ---
 bool bullet_active = false;
@@ -125,6 +126,37 @@ void update_bullet(void) {
 
 void check_bullet_collisions(void) {
     if (!bullet_active) return;
+
+    // -----------------------------------------------------------
+    // 4. CHECK JET
+    // -----------------------------------------------------------
+    // External check for jet.state
+    if (jet.state != JET_INACTIVE) {
+        // Jet is 16px wide, 8px tall.
+        // Center: WorldX + 8, Y + 4.
+        int32_t jet_cx = jet.world_x + (8 << SUBPIXEL_BITS);
+        int32_t jet_cy = jet.y + (4 << SUBPIXEL_BITS);
+
+        if (labs(bullet_world_x - jet_cx) < (12 << SUBPIXEL_BITS)) {
+            if (labs(bullet_y - jet_cy) < (8 << SUBPIXEL_BITS)) {
+                
+                // HIT!
+                jet.state = JET_INACTIVE;
+                jet.weapon_active = false; // Kill weapon too? Or let it fall? Usually kill it for fairness.
+                
+                trigger_explosion(jet.world_x, jet.y);
+                
+                bullet_active = false;
+                xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+                
+                // Hide sprites immediately
+                xram0_struct_set(JET_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+                xram0_struct_set(JET_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+                
+                return;
+            }
+        }
+    }
 
     // -----------------------------------------------------------
     // 3. CHECK BALLOON

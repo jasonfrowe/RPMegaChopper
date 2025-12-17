@@ -19,6 +19,7 @@
 #include "ebullets.h"
 #include "bomb.h"
 #include "balloon.h"
+#include "jet.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -583,6 +584,8 @@ int main(void)
         update_small_explosions();
         // Update tanks
         update_tanks();
+        // Update Jet
+        update_jet();
 
         // Render the game
         // render_game();

@@ -8,6 +8,7 @@
 #include "constants.h"
 #include "explosion.h"
 #include "hostages.h"
+#include "jet.h"
 
 
 PlayerState player_state = PLAYER_ALIVE;
@@ -87,6 +88,9 @@ void respawn_player(void) {
     
     // Reset any other flags
     is_turning = false;
+
+    // --- NEW: CLEAR ENEMIES ---
+    reset_jet();
     
     // Note: We do NOT reset hostages_rescued or destroyed bases.
     // The war continues!

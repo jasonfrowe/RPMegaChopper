@@ -67,4 +67,5 @@ target_sources(RPMegaChopper PRIVATE
     src/ebullets.c
     src/bomb.c
     src/balloon.c
+    src/jet.c
 )
