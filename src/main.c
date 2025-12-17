@@ -44,9 +44,10 @@ unsigned SMALL_EXPLOSION_CONFIG;    // Small Explosion Sprite Configuration
 unsigned TANK_CONFIG;               // Tank Sprite Configuration
 unsigned EBULLET_CONFIG;            // Enemy Bullet Sprite Configuration
 unsigned BOOM_CONFIG;               // Boom Sprite Configuration
-unsigned BALLOON_BOTTOM_CONFIG;      // Balloon Bottom Sprite Configuration
-unsigned BALLOON_TOP_CONFIG;         // Balloon Top Sprite Configuration
-unsigned JET_CONFIG;                // Jet Sprite Configuration
+unsigned BALLOON_BOTTOM_CONFIG;     // Balloon Bottom Sprite Configuration
+unsigned BALLOON_TOP_CONFIG;        // Balloon Top Sprite Configuration
+unsigned JET_LEFT_CONFIG;           // Jet Left Sprite Configuration
+unsigned JET_RIGHT_CONFIG;          // Jet Right Sprite Configuration
 unsigned BOMB_CONFIG;               // Bomb Sprite Configuration
 unsigned JET_BULLET_CONFIG;         // Jet Bullet Sprite Configuration
 unsigned JET_BOMB_CONFIG;           // Jet Bomb Sprite Configuration
@@ -205,23 +206,44 @@ static void init_graphics(void)
     xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (BALLOON_DATA + 1024)); // Balloon sprite data
     xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
 
-    JET_CONFIG = BALLOON_TOP_CONFIG + sizeof(vga_mode4_sprite_t);
-    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
-    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
-    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, JET_DATA); // Jet sprite data
-    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3) 
-    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+    JET_LEFT_CONFIG = BALLOON_TOP_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(JET_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(JET_LEFT_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(JET_LEFT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, JET_DATA); // Jet sprite data
+    xram0_struct_set(JET_LEFT_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3) 
+    xram0_struct_set(JET_LEFT_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    BOMB_CONFIG = JET_CONFIG + sizeof(vga_mode4_sprite_t);
+    JET_RIGHT_CONFIG = JET_LEFT_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(JET_RIGHT_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(JET_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(JET_RIGHT_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (JET_DATA + 128)); // Jet sprite data
+    xram0_struct_set(JET_RIGHT_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3) 
+    xram0_struct_set(JET_RIGHT_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    BOMB_CONFIG = JET_RIGHT_CONFIG + sizeof(vga_mode4_sprite_t);
     xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
     xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
     xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BOMB_DATA); // Bomb sprite data
     xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3) 
     xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 5, 2); // Enable sprites
+    JET_BULLET_CONFIG = BOMB_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(JET_BULLET_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(JET_BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -16);
+    xram0_struct_set(JET_BULLET_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BULLET_DATA); // Jet Bullet sprite data
+    xram0_struct_set(JET_BULLET_CONFIG, vga_mode4_sprite_t, log_size, 1);  // 4x4 sprite (2^1)
+    xram0_struct_set(JET_BULLET_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    unsigned FOREGROUND_SPRITE_END = BOMB_CONFIG + sizeof(vga_mode4_sprite_t);
+    JET_BOMB_CONFIG = JET_BULLET_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(JET_BOMB_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(JET_BOMB_CONFIG, vga_mode4_sprite_t, y_pos_px, -16);
+    xram0_struct_set(JET_BOMB_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BOMB_DATA); // Jet Bomb sprite data
+    xram0_struct_set(JET_BOMB_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^2)
+    xram0_struct_set(JET_BOMB_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 8, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = JET_BOMB_CONFIG + sizeof(vga_mode4_sprite_t);
 
 
     // -----------------------------------------------------
@@ -412,18 +434,49 @@ static void init_graphics(void)
     printf("Cloud A Data at 0x%04X\n", CLOUD_A_DATA);
     printf("Cloud B Data at 0x%04X\n", CLOUD_B_DATA);
     printf("Cloud C Data at 0x%04X\n", CLOUD_C_DATA);
+    printf("Landing Pad Data at 0x%04X\n", LANDINGPAD_DATA);
+    printf("Homebase Data at 0x%04X\n", HOMEBASE_DATA);
+    printf("Enemybase Data at 0x%04X\n", ENEMYBASE_DATA);
+    printf("Flags Data at 0x%04X\n", FLAGS_DATA);
+    printf("Hostages Data at 0x%04X\n", HOSTAGES_DATA);
+    printf("Bullet Data at 0x%04X\n", BULLET_DATA);
+    printf("Explosion Data at 0x%04X\n", EXPLOSION_DATA);
+    printf("Small Explosion Data at 0x%04X\n", SMALL_EXPLOSION_DATA);
+    printf("Tank Data at 0x%04X\n", TANK_DATA);
+    printf("Boom Data at 0x%04X\n", BOOM_DATA);
+    printf("Balloon Data at 0x%04X\n", BALLOON_DATA);
+    printf("Jet Data at 0x%04X\n", JET_DATA);
+    printf("Bomb Data at 0x%04X\n", BOMB_DATA);
     printf("Chopper Left Sprite Config at 0x%04X\n", CHOPPER_LEFT_CONFIG);
     printf("Chopper Right Sprite Config at 0x%04X\n", CHOPPER_RIGHT_CONFIG);
+    printf("Hostage Sprite Config at 0x%04X\n", HOSTAGE_CONFIG);
+    printf("Bullet Sprite Config at 0x%04X\n", BULLET_CONFIG);
+    printf("Explosion Left Sprite Config at 0x%04X\n", EXPLOSION_LEFT_CONFIG);
+    printf("Explosion Right Sprite Config at 0x%04X\n", EXPLOSION_RIGHT_CONFIG);
+    printf("Small Explosion Sprite Config at 0x%04X\n", SMALL_EXPLOSION_CONFIG);
+    printf("Tank Sprite Config at 0x%04X\n", TANK_CONFIG);
+    printf("Enemy Bullet Sprite Config at 0x%04X\n", EBULLET_CONFIG);
+    printf("Boom Sprite Config at 0x%04X\n", BOOM_CONFIG);
+    printf("Balloon Bottom Sprite Config at 0x%04X\n", BALLOON_BOTTOM_CONFIG);
+    printf("Balloon Top Sprite Config at 0x%04X\n", BALLOON_TOP_CONFIG);
+    printf("Jet Left Sprite Config at 0x%04X\n", JET_LEFT_CONFIG);
+    printf("Jet Right Sprite Config at 0x%04X\n", JET_RIGHT_CONFIG);
+    printf("Bomb Sprite Config at 0x%04X\n", BOMB_CONFIG);
+    printf("Jet Bullet Sprite Config at 0x%04X\n", JET_BULLET_CONFIG);
+    printf("Jet Bomb Sprite Config at 0x%04X\n", JET_BOMB_CONFIG);
     printf("Ground Map Start at 0x%04X\n", GROUND_MAP_START);
-    printf("Ground Map End at 0x%04X\n", GROUND_MAP_END);
-    printf("Ground Background Config at 0x%04X\n", GROUND_CONFIG);
     printf("CLOUD_A_CONFIG=0x%X\n", CLOUD_A_CONFIG);
     printf("CLOUD_B_CONFIG=0x%X\n", CLOUD_B_CONFIG);
     printf("CLOUD_C_CONFIG=0x%X\n", CLOUD_C_CONFIG);
-    printf("  LANDINGPAD_CONFIG=0x%X\n", LANDINGPAD_CONFIG);
-    printf("  HOMEBASE_CONFIG=0x%X\n", HOMEBASE_CONFIG);
-    printf("  ENEMYBASE_CONFIG=0x%X\n", ENEMYBASE_CONFIG);
+    printf("LANDINGPAD_CONFIG=0x%X\n", LANDINGPAD_CONFIG);
+    printf("HOMEBASE_CONFIG=0x%X\n", HOMEBASE_CONFIG);
+    printf("ENEMYBASE_CONFIG=0x%X\n", ENEMYBASE_CONFIG);
+    printf("FLAGS_CONFIG=0x%X\n", FLAGS_CONFIG);
     printf("END OF SPRITES=0x%X\n", END_OF_SPRITES);
+    printf("Ground Map End at 0x%04X\n", GROUND_MAP_END);
+    printf("Ground Background Config at 0x%04X\n", GROUND_CONFIG);
+    printf("TEXT_CONFIG=0x%X\n", TEXT_CONFIG);
+    printf("Text Message Addr=0x%X\n", text_message_addr);
     printf("  GAME_PAD_CONFIG=0x%X\n", GAMEPAD_INPUT);
     printf("  KEYBOARD_CONFIG=0x%X\n", KEYBOARD_INPUT);
     printf("  PSG_CONFIG=0x%X\n", PSG_XRAM_ADDR);

@@ -128,8 +128,11 @@ extern unsigned EBULLET_CONFIG; // Enemy Bullet Sprite Configuration
 extern unsigned BOOM_CONFIG; // Boom Sprite Configuration
 extern unsigned BALLOON_BOTTOM_CONFIG; // Balloon Bottom Sprite Configuration
 extern unsigned BALLOON_TOP_CONFIG; // Balloon Top Sprite Configuration
-extern unsigned JET_CONFIG; // Jet Sprite Configuration
+extern unsigned JET_LEFT_CONFIG; // Jet Left Sprite Configuration
+extern unsigned JET_RIGHT_CONFIG; // Jet Right Sprite Configuration
 extern unsigned BOMB_CONFIG; // Bomb Sprite Configuration
+extern unsigned JET_BULLET_CONFIG; // Jet Bullet Sprite Configuration
+extern unsigned JET_BOMB_CONFIG; // Jet Bomb Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------
