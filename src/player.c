@@ -303,8 +303,7 @@ void update_chopper_state(void) {
             trigger_explosion(chopper_world_x + (8 << SUBPIXEL_BITS), GROUND_Y_SUB);
             
             // Kill everyone
-            hostages_lost_count += hostages_on_board;
-            hostages_on_board = 0;
+            kill_all_passengers();
         }
     }
 

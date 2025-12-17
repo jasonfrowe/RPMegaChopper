@@ -13,6 +13,7 @@ typedef struct {
     uint8_t hostages_remaining;
     uint8_t spawn_timer;
     uint8_t tanks_remaining; // NEW: How many tanks are inside?
+    uint8_t tank_cooldown;   // NEW: Delay before next tank launch
 } EnemyBase;
 
 extern EnemyBase base_state[];
@@ -47,5 +48,6 @@ extern uint8_t hostages_rescued_count;
 extern uint8_t hostages_lost_count;
 
 extern void update_hostages(void);
+extern void kill_all_passengers(void);
 
 #endif // HOSTAGES_H

@@ -88,7 +88,13 @@
 #define BOOM_DATA              (TANK_DATA + TANK_DATA_SIZE) // Boom sprite data address
 #define BOOM_DATA_SIZE          0x0400U // Size of Boom sprite data
 
-#define BOMB_DATA              (BOOM_DATA + BOOM_DATA_SIZE) // Bomb sprite data address
+#define BALLOON_DATA            (BOOM_DATA + BOOM_DATA_SIZE) // Balloon sprite data address
+#define BALLOON_DATA_SIZE       0x0C00U // Size of Balloon sprite data
+
+#define JET_DATA              (BALLOON_DATA + BALLOON_DATA_SIZE) // Jet sprite data address
+#define JET_DATA_SIZE          0x0200U // Size of Jet sprite data
+
+#define BOMB_DATA              (JET_DATA + JET_DATA_SIZE) // Bomb sprite data address
 #define BOMB_DATA_SIZE          0x0080U // Size of Bomb sprite data
 
 #define SPRITE_DATA_END        (BOMB_DATA + BOMB_DATA_SIZE) // End of used data area
@@ -120,6 +126,9 @@ extern unsigned SMALL_EXPLOSION_CONFIG; // Small Explosion Sprite Configuration
 extern unsigned TANK_CONFIG; // Tank Sprite Configuration
 extern unsigned EBULLET_CONFIG; // Enemy Bullet Sprite Configuration
 extern unsigned BOOM_CONFIG; // Boom Sprite Configuration
+extern unsigned BALLOON_CONFIG; // Balloon Sprite Configuration
+extern unsigned JET_CONFIG; // Jet Sprite Configuration
+extern unsigned BOMB_CONFIG; // Bomb Sprite Configuration
 
 // 4. TILE MAP CONFIGURATION
 // -------------------------------------------------------------------------

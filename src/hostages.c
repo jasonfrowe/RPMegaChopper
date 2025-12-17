@@ -34,6 +34,24 @@ uint16_t get_hostage_ptr(int frame_idx) {
     return HOSTAGES_DATA + (frame_idx * 512);
 }
 
+void kill_all_passengers(void) {
+    for (int i = 0; i < NUM_HOSTAGES; i++) {
+        // If they are on board (or mid-boarding), they die
+        if (hostages[i].state == H_STATE_ON_BOARD || 
+            hostages[i].state == H_STATE_BOARDING) {
+            
+            hostages[i].state = H_STATE_INACTIVE;
+            
+            // Note: We don't spawn explosions here because they are inside 
+            // the chopper, which is already exploding.
+        }
+    }
+    
+    // Update Global Counts
+    hostages_lost_count += hostages_on_board;
+    hostages_on_board = 0;
+}
+
 void update_hostages(void) {
     
     // --- 1. PRE-CALCULATE CHOPPER STATE ---
@@ -179,7 +197,7 @@ void update_hostages(void) {
                     // (If we arrived at the "Wander Point", this check will fail, which is correct)
                     int32_t dist_to_chopper = labs(chopper_center_x - host_cx);
                     
-                    if (is_chopper_landed && dist_to_chopper < (12 << SUBPIXEL_BITS)) {
+                    if (is_chopper_landed && dist_to_chopper < (12 << SUBPIXEL_BITS) && player_state == PLAYER_ALIVE) {
                         hostages[i].state = H_STATE_ON_BOARD;
                         hostages_on_board++;
                         xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);

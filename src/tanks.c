@@ -48,17 +48,19 @@ void update_tanks(void) {
 
     int closest_base_idx = get_closest_base_index();
 
-    // =========================================================
-    // 1. SPAWN LOGIC (Target Closest Base)
-    // =========================================================
+    // --- 1. UPDATE BASE COOLDOWNS ---
+    for (int i = 0; i < NUM_ENEMY_BASES; i++) {
+        if (base_state[i].tank_cooldown > 0) {
+            base_state[i].tank_cooldown--;
+        }
+    }
+
+    // --- 2. SPAWN LOGIC ---
     int total_progress = hostages_rescued_count + hostages_on_board;
-    
-    // Timer handling
     if (tank_spawn_timer > 0) tank_spawn_timer--;
 
     if (total_progress >= TANK_SPAWN_TRIGGER && tank_spawn_timer == 0) {
         
-        // Find an empty hardware slot
         int free_slot = -1;
         for (int t = 0; t < NUM_TANKS; t++) {
             if (!tanks[t].active) {
@@ -67,37 +69,55 @@ void update_tanks(void) {
             }
         }
 
-        // Only spawn if we have a valid base with tanks
-        if (free_slot != -1 && closest_base_idx != -1 && base_state[closest_base_idx].tanks_remaining > 0) {
+        int b = get_closest_base_index();
+
+        if (free_slot != -1 && b != -1 && 
+            base_state[b].tanks_remaining > 0 && 
+            base_state[b].tank_cooldown == 0) {
             
-            int32_t base_x = ENEMY_BASE_LOCATIONS[closest_base_idx];
+            int32_t base_x = ENEMY_BASE_LOCATIONS[b];
             int32_t spawn_x = 0;
             int8_t  start_dir = 0;
 
-            // Strategy: Alternating Flanks
-            bool spawn_left_side = (base_state[closest_base_idx].tanks_remaining % 2 == 0);
+            // --- SMARTER FLANK LOGIC ---
+            // Default: Left Flanker (Drive Right)
+            bool spawn_left_side = true; 
+
+            // If there is ALREADY 1 tank out there, check which one it is
+            // so we can spawn the opposite.
+            if (base_state[b].tanks_remaining == 1) {
+                for (int t = 0; t < NUM_TANKS; t++) {
+                    if (tanks[t].active && tanks[t].base_id == b) {
+                        // If the existing tank is driving Right (Left Flanker),
+                        // we should spawn the Right Flanker (False).
+                        // If existing is driving Left (Right Flanker), 
+                        // we spawn Left Flanker (True).
+                        
+                        // We use the tank's CURRENT position relative to base to be sure
+                        if (tanks[t].world_x < base_x) {
+                            spawn_left_side = false; // Existing is Left, Spawn Right
+                        } else {
+                            spawn_left_side = true;  // Existing is Right, Spawn Left
+                        }
+                        break;
+                    }
+                }
+            }
+            // If tanks_remaining == 2, we default to Left Side (True) to start the pair.
 
             if (spawn_left_side) {
-                // LEFT FLANKER
+                // LEFT FLANKER (Spawns Left, Drives Right)
                 int32_t ideal_x = base_x - TANK_SPAWN_OFFSET_X;
-                // If visible, push behind Left edge
-                if (ideal_x > camera_x) {
-                    spawn_x = camera_x - OFFSCREEN_BUFFER;
-                } else {
-                    spawn_x = ideal_x;
-                }
+                if (ideal_x > camera_x) spawn_x = camera_x - OFFSCREEN_BUFFER;
+                else spawn_x = ideal_x;
                 start_dir = 1; 
             } 
             else {
-                // RIGHT FLANKER
+                // RIGHT FLANKER (Spawns Right, Drives Left)
                 int32_t ideal_x = base_x + TANK_SPAWN_OFFSET_X;
                 int32_t camera_right = camera_x + SCREEN_WIDTH_SUB;
-                // If visible, push behind Right edge
-                if (ideal_x < camera_right) {
-                    spawn_x = camera_right + OFFSCREEN_BUFFER;
-                } else {
-                    spawn_x = ideal_x;
-                }
+                if (ideal_x < camera_right) spawn_x = camera_right + OFFSCREEN_BUFFER;
+                else spawn_x = ideal_x;
                 start_dir = -1;
             }
 
@@ -107,14 +127,14 @@ void update_tanks(void) {
 
             // Activate
             tanks[free_slot].active = true;
-            tanks[free_slot].base_id = closest_base_idx;
+            tanks[free_slot].base_id = b;
             tanks[free_slot].world_x = spawn_x;
             tanks[free_slot].y = GROUND_Y_SUB + (32 << SUBPIXEL_BITS);
             tanks[free_slot].direction = start_dir;
-            tanks[free_slot].health = 3;
+            tanks[free_slot].health = 1;
             
-            base_state[closest_base_idx].tanks_remaining--;
-            tank_spawn_timer = 60; // 1 second delay between spawns
+            base_state[b].tanks_remaining--;
+            tank_spawn_timer = 60; 
         }
     }
 

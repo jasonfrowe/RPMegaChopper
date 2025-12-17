@@ -45,11 +45,11 @@ void draw_hud_stat(uint8_t offset, uint8_t icon, uint8_t color, int value) {
 
 void update_hud(void) {
     // Offset 2: LOST (Red)
-    draw_hud_stat(10, ICON_DEAD_SPLAT, HUD_COL_RED, hostages_lost_count);
+    draw_hud_stat(12, ICON_DEAD_SPLAT, HUD_COL_RED, hostages_lost_count);
 
     // Offset 12: LOAD (Yellow)
-    draw_hud_stat(16, ICON_FACE_FILLED, HUD_COL_YELLOW, hostages_on_board);
+    draw_hud_stat(18, ICON_FACE_FILLED, HUD_COL_YELLOW, hostages_on_board);
 
     // Offset 22: SAFE (Green)
-    draw_hud_stat(22, ICON_HOUSE, HUD_COL_GREEN, hostages_rescued_count);
+    draw_hud_stat(24, ICON_HOUSE, HUD_COL_GREEN, hostages_rescued_count);
 }

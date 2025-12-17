@@ -23,7 +23,9 @@ rp6502_asset(RPMegaChopper 0x1BD08 images/Explosion.bin)
 rp6502_asset(RPMegaChopper 0x1D108 images/SmallExplode.bin)
 rp6502_asset(RPMegaChopper 0x1D488 images/Tank.bin)
 rp6502_asset(RPMegaChopper 0x1DF88 images/Boom.bin)
-rp6502_asset(RPMegaChopper 0x1D188 images/Bomb.bin)
+rp6502_asset(RPMegaChopper 0x1E388 images/Balloon.bin)
+rp6502_asset(RPMegaChopper 0x1EF88 images/Jet.bin)
+rp6502_asset(RPMegaChopper 0x1F188 images/Bomb.bin)
 rp6502_executable(RPMegaChopper
     Chopper.bin.rp6502
     Tiles_Ground.bin.rp6502
@@ -40,6 +42,8 @@ rp6502_executable(RPMegaChopper
     SmallExplode.bin.rp6502
     Tank.bin.rp6502
     Boom.bin.rp6502
+    Balloon.bin.rp6502
+    Jet.bin.rp6502
     Bomb.bin.rp6502
     DATA file
     RESET file
@@ -61,4 +65,5 @@ target_sources(RPMegaChopper PRIVATE
     src/smallexplosion.c
     src/tanks.c
     src/ebullets.c
+    src/bomb.c
 )

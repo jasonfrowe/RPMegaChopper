@@ -17,6 +17,7 @@
 #include "smallexplosion.h"
 #include "tanks.h"
 #include "ebullets.h"
+#include "bomb.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -42,6 +43,9 @@ unsigned SMALL_EXPLOSION_CONFIG;    // Small Explosion Sprite Configuration
 unsigned TANK_CONFIG;               // Tank Sprite Configuration
 unsigned EBULLET_CONFIG;            // Enemy Bullet Sprite Configuration
 unsigned BOOM_CONFIG;               // Boom Sprite Configuration
+unsigned BALLOON_CONFIG;            // Balloon Sprite Configuration
+unsigned JET_CONFIG;                // Jet Sprite Configuration
+unsigned BOMB_CONFIG;               // Bomb Sprite Configuration
 
 
 static void init_graphics(void)
@@ -184,9 +188,30 @@ static void init_graphics(void)
     xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
     xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 1, 2); // Enable sprites
+    BALLOON_CONFIG = BOOM_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BALLOON_DATA); // Balloon sprite data
+    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
+    xram0_struct_set(BALLOON_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
-    unsigned FOREGROUND_SPRITE_END = BOOM_CONFIG + sizeof(vga_mode4_sprite_t);
+    JET_CONFIG = BALLOON_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, JET_DATA); // Jet sprite data
+    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3) 
+    xram0_struct_set(JET_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    BOMB_CONFIG = JET_CONFIG + sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
+    xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
+    xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BOMB_DATA); // Bomb sprite data
+    xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3) 
+    xram0_struct_set(BOMB_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
+    xregn(1, 0, 1, 5, 4, 0, CHOPPER_LEFT_CONFIG, 2 + NUM_HOSTAGES + NUM_BULLETS + 2 + MAX_EXPLOSIONS + total_tank_sprites + NEBULLET + 4, 2); // Enable sprites
+
+    unsigned FOREGROUND_SPRITE_END = BOMB_CONFIG + sizeof(vga_mode4_sprite_t);
 
 
     // -----------------------------------------------------
@@ -345,7 +370,7 @@ static void init_graphics(void)
 
         xram0_struct_set(ptr, vga_mode1_config_t, x_wrap, 0);
         xram0_struct_set(ptr, vga_mode1_config_t, y_wrap, 0);
-        xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 7); //Bug: first char duplicated if not set to zero
+        xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 0); //Bug: first char duplicated if not set to zero
         xram0_struct_set(ptr, vga_mode1_config_t, y_pos_px, 5);
         xram0_struct_set(ptr, vga_mode1_config_t, width_chars, MESSAGE_WIDTH);
         xram0_struct_set(ptr, vga_mode1_config_t, height_chars, MESSAGE_HEIGHT);
@@ -409,6 +434,7 @@ void init_game_logic(void) {
         base_state[i].hostages_remaining = HOSTAGES_PER_BASE;
         base_state[i].spawn_timer = 0;
         base_state[i].tanks_remaining = TANKS_PER_BASE;
+        base_state[i].tank_cooldown = 0; // Ready to spawn
     }
 
     // Reset Active Tank Pool
@@ -476,6 +502,8 @@ int main(void)
         check_bullet_collisions();
         // Update enemy bullets
         update_tank_bullets();
+        // Update bombs
+        update_bomb();
         // Update hostages
         update_hostages();
         // Update HUD
