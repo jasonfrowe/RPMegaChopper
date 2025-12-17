@@ -11,6 +11,7 @@
 #include "explosion.h"
 #include "hostages.h"
 #include "enemybase.h"
+#include "sound.h"
 
 // --- BOMB STATE ---
 bool bomb_active = false;
@@ -38,6 +39,7 @@ void check_tank_collision_bomb(void) {
                 
                 // Trigger Big Explosion
                 trigger_explosion(tank_center, tanks[t].y - (16 << SUBPIXEL_BITS));
+                sfx_explosion_small();
                 
                 // --- NEW: Set Respawn Cooldown ---
                 // Prevent this base from spawning another tank for 3 seconds
@@ -53,6 +55,7 @@ void check_tank_collision_bomb(void) {
             } else {
                 // Damaged (Optional: Spawn small spark)
                 spawn_small_explosion(bomb_world_x, tanks[t].y - (16<<4));
+                sfx_explosion_small();
             }
             
             // Hide bomb
@@ -88,6 +91,8 @@ void update_bomb(void) {
             } else {
                 bomb_target_y = TARGET_Y_GROUND;
             }
+
+            sfx_bomb_drop();
         }
     }
     // Note: We don't update last_fire_state here because update_bullet() or 

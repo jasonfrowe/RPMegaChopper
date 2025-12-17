@@ -9,6 +9,7 @@
 #include "explosion.h"
 #include "hostages.h"
 #include "jet.h"
+#include "sound.h"
 
 
 PlayerState player_state = PLAYER_ALIVE;
@@ -91,6 +92,9 @@ void respawn_player(void) {
 
     // --- NEW: CLEAR ENEMIES ---
     reset_jet();
+
+    // Restart Engine Idle Sound immediately
+    update_chopper_sound(0);
     
     // Note: We do NOT reset hostages_rescued or destroyed bases.
     // The war continues!
@@ -111,6 +115,7 @@ void kill_player(void) {
     
     // Set to Frame 0
     xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)BOOM_DATA);
+    sfx_explosion_large(); // Play explosion sound
 }
 
 void update_chopper_state(void) {
@@ -266,12 +271,27 @@ void update_chopper_state(void) {
         // Keep local trackers in sync (for compatibility)
         chopper_xl += velocity_x;
         chopper_xr += velocity_x;
+
+
+        int16_t abs_vx = (velocity_x < 0) ? -velocity_x : velocity_x;
+        int16_t abs_vy = 0;
+        
+        if (input_up) abs_vy = CLIMB_SPEED;
+        else if (input_down) abs_vy = DIVE_SPEED;
+        
+        // Pass total speed (scaled down to fit 16-bit comfortably if needed)
+        // velocity_x is subpixels (e.g. 32).
+        update_chopper_sound(abs_vx + abs_vy);
+        
+
     }
 
     // =========================================================
     // STATE: FALLING (Spinning Down)
     // =========================================================
     else if (player_state == PLAYER_DYING_FALLING) {
+
+        stop_chopper_sound();
         
         // 1. Gravity (Fall Fast)
         chopper_y += (3 << SUBPIXEL_BITS); 

@@ -141,7 +141,8 @@ void update_tank_bullets(void) {
 
                         tanks[t].fire_cooldown = 30 + (rand() % 30); // 0.5 - 1 sec cooldown
 
-                        play_sound(SFX_TYPE_ENEMY_FIRE, 440, PSG_WAVE_TRIANGLE, 0, 4, 3, 3);
+                        // play_sound(SFX_TYPE_ENEMY_FIRE, 440, PSG_WAVE_TRIANGLE, 0, 4, 3, 3);
+                        sfx_enemy_shoot();
 
                         break; // Fired!
                     }
@@ -219,6 +220,7 @@ void update_tank_bullets(void) {
                             int32_t host_cx = hostages[h].world_x + (8 << SUBPIXEL_BITS);
                             hostages[h].state = H_STATE_DYING;
                             spawn_small_explosion(host_cx, hostages[h].y + (8<<SUBPIXEL_BITS));
+                            sfx_hostage_die();
                             
                             // Destroy Bullet
                             tank_bullets[b].active = false;

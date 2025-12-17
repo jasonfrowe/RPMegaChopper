@@ -9,6 +9,7 @@
 #include "jet.h"
 #include "smallexplosion.h"
 #include "explosion.h"
+#include "sound.h"
 
 
 #define JET_GROUND_Y_SUB  (GROUND_Y_SUB + (14 << SUBPIXEL_BITS)) // Ground level for enemy bullets
@@ -185,6 +186,7 @@ void update_jet(void) {
                 
                 jet.has_fired = true;
                 jet.state = JET_ARCING_AWAY; // Fly away
+                sfx_bomb_drop();
             }
         }
         // BULLET: Fire when in range but not too close
@@ -201,6 +203,7 @@ void update_jet(void) {
                 
                 jet.has_fired = true;
                 jet.state = JET_ARCING_AWAY;
+                sfx_enemy_shoot();
             }
         }
     }

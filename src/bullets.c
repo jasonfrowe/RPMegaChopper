@@ -91,7 +91,8 @@ void update_bullet(void) {
             bullet_active = true;
             bullet_y = chopper_y + BULLET_Y_OFFSET;
             player_fire_cooldown = 20; // 20 frame cooldown
-            play_sound(SFX_TYPE_PLAYER_FIRE, 110, PSG_WAVE_SQUARE, 0, 3, 4, 2);
+            // play_sound(SFX_TYPE_PLAYER_FIRE, 110, PSG_WAVE_SQUARE, 0, 3, 4, 2);
+            sfx_player_shoot();
         }
     }
 
@@ -155,6 +156,7 @@ void check_bullet_collisions(void) {
                 jet.weapon_active = false; // Kill weapon too? Or let it fall? Usually kill it for fairness.
                 
                 trigger_explosion(jet.world_x, jet.y);
+                sfx_explosion_small();
                 
                 bullet_active = false;
                 xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
@@ -202,6 +204,7 @@ void check_bullet_collisions(void) {
 
                 // Big Explosion centered on the balloon
                 trigger_explosion(balloon.world_x, balloon_cy);
+                sfx_explosion_small();
                 
                 return;
             }
@@ -246,6 +249,7 @@ void check_bullet_collisions(void) {
                 // Trigger explosion
                 // Centered on the base (Base X + 16px to center the 32px explosion on the 64px building)
                 trigger_explosion(base_left_x + (16 << SUBPIXEL_BITS), GROUND_Y_SUB - (4 << SUBPIXEL_BITS));
+                sfx_explosion_small();
 
                 // Hide bullet sprite immediately
                 xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
@@ -283,6 +287,7 @@ void check_bullet_collisions(void) {
                     
                     // Visuals
                     spawn_small_explosion(hostages[i].world_x + (8 << SUBPIXEL_BITS), hostages[i].y + (12 << SUBPIXEL_BITS));
+                    sfx_hostage_die();
                     
                     // Destroy Bullet
                     bullet_active = false;

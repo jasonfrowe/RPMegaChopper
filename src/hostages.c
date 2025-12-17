@@ -8,6 +8,7 @@
 #include "enemybase.h"
 #include "homebase.h"
 #include "smallexplosion.h"
+#include "sound.h"
 
 
 Hostage hostages[NUM_HOSTAGES];
@@ -140,6 +141,7 @@ void update_hostages(void) {
             if (dist < crush_threshold) {
                 hostages[i].state = H_STATE_DYING;
                 spawn_small_explosion(host_cx, hostages[i].y + (8<<4));
+                sfx_hostage_die();
                 continue; 
             }
         }
@@ -177,6 +179,7 @@ void update_hostages(void) {
                 hostages_rescued_count++;
                 hostages[i].state = H_STATE_INACTIVE;
                 xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
+                sfx_hostage_rescue(); // <--- ADD HERE (Waver enters base)
                 continue;
             }
         }
@@ -203,6 +206,7 @@ void update_hostages(void) {
                         hostages[i].state = H_STATE_ON_BOARD;
                         hostages_on_board++;
                         xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
+                        sfx_hostage_rescue();
                         continue;
                     }
                 }
@@ -214,6 +218,7 @@ void update_hostages(void) {
                         hostages_rescued_count++;
                         hostages[i].state = H_STATE_INACTIVE;
                         xram0_struct_set(cfg, vga_mode4_sprite_t, y_pos_px, -32);
+                        sfx_hostage_rescue(); // <--- ADD HERE (Waver enters base)
                         continue;
                     }
                 }
