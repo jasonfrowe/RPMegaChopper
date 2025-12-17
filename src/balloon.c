@@ -125,15 +125,27 @@ void update_balloon(void) {
     // 3. COLLISION: PLAYER (The Balloon hits the Chopper)
     // =========================================================
     if (player_state == PLAYER_ALIVE) {
-        // Simple Box Collision
-        if (labs(balloon.world_x - target_x) < (12 << SUBPIXEL_BITS)) { // Width
-            if (labs(balloon.y - target_y) < (16 << SUBPIXEL_BITS)) {   // Height
+        
+        // 1. Calculate Balloon Center X (World X + 8px)
+        int32_t balloon_cx = balloon.world_x + (8 << SUBPIXEL_BITS);
+        
+        // 2. Balloon Center Y is just balloon.y 
+        // (Based on render logic: Top is y-16, Bottom is y. Range is y-16 to y+16. Center is y.)
+        int32_t balloon_cy = balloon.y; 
+
+        // 3. Horizontal Check (Center to Center)
+        // Combined radii is ~24px. We use 18px for a tight fit.
+        if (labs(balloon_cx - target_x) < (18 << SUBPIXEL_BITS)) { 
+            
+            // 4. Vertical Check
+            // Combined radii is ~24px. We use 18px.
+            if (labs(balloon_cy - target_y) < (18 << SUBPIXEL_BITS)) {   
                 
                 // CRASH PLAYER
                 kill_player();
                 
                 // DESTROY BALLOON
-                trigger_explosion(balloon.world_x, balloon.y); // Visual
+                trigger_explosion(balloon.world_x, balloon.y); 
                 balloon.active = false;
                 balloon.respawn_timer = BALLOON_RESPAWN;
                 return;
