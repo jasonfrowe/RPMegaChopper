@@ -361,5 +361,5 @@ void update_chopper_state(void) {
     xram0_struct_set(CHOPPER_RIGHT_CONFIG, vga_mode4_sprite_t, y_pos_px, hardware_y);
 
     // Scroll
-    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_pos_px, -(camera_x >> SUBPIXEL_BITS));
+    xram0_struct_set(GROUND_CONFIG, vga_mode2_config_t, x_pos_px, -((camera_x/2) >> SUBPIXEL_BITS));
 }

@@ -43,7 +43,7 @@ void check_tank_collision_bomb(void) {
                 // Prevent this base from spawning another tank for 3 seconds
                 int base_id = tanks[t].base_id;
                 if (base_id >= 0 && base_id < NUM_ENEMY_BASES) {
-                    base_state[base_id].tank_cooldown = 180; 
+                    base_state[base_id].tank_cooldown = 360; // 360 frames = 6 seconds at 60fps
 
                     // 2. REPLENISH INVENTORY
                     // This allows the base to spawn a replacement tank later
