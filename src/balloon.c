@@ -168,17 +168,17 @@ void update_balloon(void) {
         // --- X Movement ---
         // If balloon tries to go past the safety line towards home, force it back
         if (balloon.world_x > safety_line) {
-            balloon.vx = -BALLOON_SPEED; // Go Left
+            balloon.vx = -BALLOON_SPEED_X; // Go Left
         } 
         else {
             // Normal Homing
-            if (balloon.world_x < target_x) balloon.vx = BALLOON_SPEED;
-            else balloon.vx = -BALLOON_SPEED;
+            if (balloon.world_x < target_x) balloon.vx = BALLOON_SPEED_X;
+            else balloon.vx = -BALLOON_SPEED_X;
         }
 
         // --- Y Movement ---
-        if (balloon.y < target_y) balloon.vy = BALLOON_SPEED;
-        else balloon.vy = -BALLOON_SPEED;
+        if (balloon.y < target_y) balloon.vy = BALLOON_SPEED_Y;
+        else balloon.vy = -BALLOON_SPEED_Y;
 
         // --- Apply Physics ---
         balloon.world_x += balloon.vx;

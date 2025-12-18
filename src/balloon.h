@@ -2,7 +2,8 @@
 #define BALLOON_H
 
 // Configuration
-#define BALLOON_SPEED       (1 << SUBPIXEL_BITS) // Slow, relentless
+#define BALLOON_SPEED_X       (1 << SUBPIXEL_BITS) // Slow, relentless
+#define BALLOON_SPEED_Y       8 // Slow, relentless
 #define BALLOON_RESPAWN     300 // 5 seconds
 #define BALLOON_WIDTH       (12 << SUBPIXEL_BITS) // Hitbox width
 #define BALLOON_HEIGHT      (28 << SUBPIXEL_BITS) // Hitbox height
