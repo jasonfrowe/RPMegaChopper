@@ -707,7 +707,7 @@ int main(void)
                     clear_text_screen();
                     draw_text(18, 5, "MEGA", HUD_COL_YELLOW);
                     draw_text(15, 7, "CHOPLIFTER", HUD_COL_RED);
-                    draw_text(14, 11, "PRESS START", HUD_COL_WHITE);
+                    draw_text(14, 12, "PRESS  START", HUD_COL_WHITE);
                     start_title_music();
                 }
                 break;

@@ -152,8 +152,8 @@ void update_jet(void) {
 
         if (jet.weapon_type == WEAPON_BOMB) {
             
-            // Physics: Bomb travels forward ~70px while falling from 80px height
-            const int32_t DROP_LEAD = (70 << SUBPIXEL_BITS);
+            // Physics: Bomb travels forward ~65px while falling from 80px height
+            const int32_t DROP_LEAD = (58 << SUBPIXEL_BITS); //72 was the expected value
             const int32_t DROP_WINDOW = (10 << SUBPIXEL_BITS); // Tolerance
             
             bool should_drop = false;
