@@ -22,6 +22,7 @@
 #include "jet.h"
 #include "sound.h"
 #include "music.h"
+#include "highscore.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -553,6 +554,8 @@ int main(void)
 
     puts("Hello from RPMegaChopper");
 
+    load_high_scores(); // Load high scores from disk
+
     // Enable keyboard input
     xregn(0, 0, 0, 1, KEYBOARD_INPUT);
     // Enable gamepad input
@@ -566,9 +569,11 @@ int main(void)
 
     // Draw initial Title Screen
     clear_text_screen();
-    draw_text(17, 5, "MEGA", HUD_COL_YELLOW);
-    draw_text(14, 7, "CHOPLIFTER", HUD_COL_RED);
-    draw_text(13, 12, "PRESS  START", HUD_COL_WHITE);
+    draw_text(17, 4, "MEGA", HUD_COL_YELLOW);
+    draw_text(14, 6, "CHOPLIFTER", HUD_COL_RED);
+    // Draw High Scores around title
+    draw_high_score_screen();
+    draw_text(13, 14, "PRESS  START", HUD_COL_WHITE);
 
     start_title_music();
 
@@ -696,6 +701,17 @@ int main(void)
             case STATE_GAME_OVER:
                 if (game_over_timer == 0) {
                     start_end_music();
+
+                    // clear_text_screen();
+                    // CHECK FOR HIGH SCORE
+                    if (is_new_high_score(hostages_rescued_count, hostages_lost_count) ||
+                        is_new_todays_best(hostages_rescued_count, hostages_lost_count)) {
+                        
+                        enter_initials(hostages_rescued_count, hostages_lost_count);
+                        clear_text_screen(); // Clear the entry UI
+                    }
+
+                    draw_text(15, 7, "GAME OVER", HUD_COL_RED);
                 }
                 update_music();
                 game_over_timer++;
@@ -705,9 +721,11 @@ int main(void)
                     game_state = STATE_TITLE;
                     
                     clear_text_screen();
-                    draw_text(18, 5, "MEGA", HUD_COL_YELLOW);
-                    draw_text(15, 7, "CHOPLIFTER", HUD_COL_RED);
-                    draw_text(14, 12, "PRESS  START", HUD_COL_WHITE);
+                    draw_text(18, 4, "MEGA", HUD_COL_YELLOW);
+                    draw_text(15, 6, "CHOPLIFTER", HUD_COL_RED);
+                    // Draw High Scores around title
+                    draw_high_score_screen();
+                    draw_text(14, 14, "PRESS  START", HUD_COL_WHITE);
                     start_title_music();
                 }
                 break;
