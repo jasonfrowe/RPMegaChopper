@@ -201,7 +201,7 @@ static void init_graphics(void)
     BALLOON_BOTTOM_CONFIG = BOOM_CONFIG + sizeof(vga_mode4_sprite_t);
     xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
     xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
-    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (BALLOON_DATA + 1024)); // Balloon sprite data
+    xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, BALLOON_DATA); // Balloon sprite data
     xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
     xram0_struct_set(BALLOON_BOTTOM_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
@@ -210,6 +210,7 @@ static void init_graphics(void)
     xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, y_pos_px, -16); 
     xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (BALLOON_DATA + 1024)); // Balloon sprite data
     xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4) 
+    xram0_struct_set(BALLOON_TOP_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
 
     JET_LEFT_CONFIG = BALLOON_TOP_CONFIG + sizeof(vga_mode4_sprite_t);
     xram0_struct_set(JET_LEFT_CONFIG, vga_mode4_sprite_t, x_pos_px, -16); // Off-screen initially
