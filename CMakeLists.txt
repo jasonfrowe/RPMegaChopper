@@ -73,4 +73,5 @@ target_sources(RPMegaChopper PRIVATE
     src/sound.c
     src/music.c
     src/highscore.c
+    src/boom.c
 )

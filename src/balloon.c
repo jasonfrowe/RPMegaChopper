@@ -10,8 +10,12 @@
 #include "enemybase.h"
 #include "explosion.h"
 #include "homebase.h"
+#include "sound.h"
 
-Balloon balloon;
+
+#define BALLOON_GROUND_Y        (GROUND_Y_SUB + (12 << SUBPIXEL_BITS)) // Ground level for balloon crash
+
+Balloon balloon; 
 
 // Sprite Data Offsets (16x16 = 512 bytes)
 // Frame 0: Bottom=0, Top=512
@@ -71,6 +75,7 @@ void update_balloon(void) {
             if (screen_px < -32 || screen_px > 350) {
                 // SPAWN!
                 balloon.active = true;
+                balloon.is_falling = false;
                 balloon.world_x = spawn_x;
                 balloon.y = GROUND_Y_SUB - (60 << SUBPIXEL_BITS); // Start high up
                 balloon.vx = 0;
@@ -81,55 +86,92 @@ void update_balloon(void) {
         return; // Don't render if inactive
     }
 
-    // =========================================================
-    // 2. AI: HOMING
-    // =========================================================
-    
-    // --- Define Boundaries ---
-    // Safety Line: Halfway between the last enemy base (Index 3) and Home
-    int32_t safety_line = (ENEMY_BASE_LOCATIONS[3] + HOMEBASE_WORLD_X) / 2;
-    
-    // Floor Ceiling: 32 pixels above ground
-    int32_t min_altitude = GROUND_Y_SUB - (32 << SUBPIXEL_BITS);
-    
-    // Target: Chopper Center
-    int32_t target_x = chopper_world_x + (16 << SUBPIXEL_BITS);
-    int32_t target_y = chopper_y + (8 << SUBPIXEL_BITS);
+    // --- CASE A: FALLING (Shot Down) ---
+    if (balloon.is_falling) {
+        // 1. Apply Gravity
+        balloon.vy += 2; // Gravity (0.125 px/frame)
+        balloon.y += balloon.vy;
+        
+        // 2. Apply Momentum (optional, usually 0)
+        balloon.world_x += balloon.vx;
 
-    // --- X Movement ---
-    // If balloon tries to go past the safety line towards home, force it back
-    if (balloon.world_x > safety_line) {
-        balloon.vx = -BALLOON_SPEED; // Go Left
-    } 
-    else {
-        // Normal Homing
-        if (balloon.world_x < target_x) balloon.vx = BALLOON_SPEED;
-        else balloon.vx = -BALLOON_SPEED;
+        // 3. Fast Animation (Spinning/Flailing)
+        balloon.anim_timer++;
+        if (balloon.anim_timer > 2) { // Very fast (every 2 frames)
+            balloon.anim_timer = 0;
+            balloon.anim_frame++;
+            if (balloon.anim_frame > 2) balloon.anim_frame = 0;
+        }
+
+        // 4. Ground Impact Check
+        if (balloon.y >= BALLOON_GROUND_Y) {
+            // CRASH!
+            trigger_explosion(balloon.world_x, BALLOON_GROUND_Y);
+            sfx_explosion_large(); // Big Boom!
+            
+            // Deactivate and start Respawn Timer
+            balloon.active = false;
+            balloon.is_falling = false;
+            balloon.respawn_timer = BALLOON_RESPAWN;
+            return; // Stop processing
+        }
     }
+    // --- CASE B: FLYING (Normal AI) ---
+    else {
 
-    // --- Y Movement ---
-    if (balloon.y < target_y) balloon.vy = BALLOON_SPEED;
-    else balloon.vy = -BALLOON_SPEED;
+        // =========================================================
+        // 2. AI: HOMING
+        // =========================================================
+        
+        // --- Define Boundaries ---
+        // Safety Line: Halfway between the last enemy base (Index 3) and Home
+        int32_t safety_line = (ENEMY_BASE_LOCATIONS[3] + HOMEBASE_WORLD_X) / 2;
+        
+        // Floor Ceiling: 32 pixels above ground
+        int32_t min_altitude = GROUND_Y_SUB - (32 << SUBPIXEL_BITS);
+        
+        // Target: Chopper Center
+        int32_t target_x = chopper_world_x + (16 << SUBPIXEL_BITS);
+        int32_t target_y = chopper_y + (8 << SUBPIXEL_BITS);
 
-    // --- Apply Physics ---
-    balloon.world_x += balloon.vx;
-    balloon.y += balloon.vy;
+        // --- X Movement ---
+        // If balloon tries to go past the safety line towards home, force it back
+        if (balloon.world_x > safety_line) {
+            balloon.vx = -BALLOON_SPEED; // Go Left
+        } 
+        else {
+            // Normal Homing
+            if (balloon.world_x < target_x) balloon.vx = BALLOON_SPEED;
+            else balloon.vx = -BALLOON_SPEED;
+        }
 
-    // --- Clamp Altitude ---
-    // If balloon is too low, force it up to the minimum altitude
-    if (balloon.y > min_altitude) {
-        balloon.y = min_altitude;
+        // --- Y Movement ---
+        if (balloon.y < target_y) balloon.vy = BALLOON_SPEED;
+        else balloon.vy = -BALLOON_SPEED;
+
+        // --- Apply Physics ---
+        balloon.world_x += balloon.vx;
+        balloon.y += balloon.vy;
+
+        // --- Clamp Altitude ---
+        // If balloon is too low, force it up to the minimum altitude
+        if (balloon.y > min_altitude) {
+            balloon.y = min_altitude;
+        }
     }
 
     // =========================================================
     // 3. COLLISION: PLAYER (The Balloon hits the Chopper)
     // =========================================================
-    if (player_state == PLAYER_ALIVE) {
+    if (player_state == PLAYER_ALIVE && !balloon.is_falling) {
+
+        int32_t target_x = chopper_world_x + (16 << SUBPIXEL_BITS);
+        int32_t target_y = chopper_y + (8 << SUBPIXEL_BITS);
         
-        // 1. Calculate Balloon Center X (World X + 8px)
+        // Calculate Balloon Center X (World X + 8px)
         int32_t balloon_cx = balloon.world_x + (8 << SUBPIXEL_BITS);
         
-        // 2. Balloon Center Y is just balloon.y 
+        // Balloon Center Y is just balloon.y 
         // (Based on render logic: Top is y-16, Bottom is y. Range is y-16 to y+16. Center is y.)
         int32_t balloon_cy = balloon.y; 
 

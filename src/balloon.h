@@ -10,6 +10,7 @@
 // --- BALLOON STATE ---
 typedef struct {
     bool active;
+    bool is_falling;
     int32_t world_x;
     int32_t y;
     int16_t vx, vy;

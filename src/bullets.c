@@ -13,6 +13,7 @@
 #include "balloon.h"
 #include "jet.h"
 #include "sound.h"
+#include "boom.h"
 
 // --- BULLET STATE ---
 bool bullet_active = false;
@@ -173,21 +174,16 @@ void check_bullet_collisions(void) {
     // -----------------------------------------------------------
     // 3. CHECK BALLOON
     // -----------------------------------------------------------
-    // -----------------------------------------------------------
-    // 3. CHECK BALLOON
-    // -----------------------------------------------------------
-    if (balloon.active) {
+    // Only hit if active and NOT already falling
+    if (balloon.active && !balloon.is_falling) {
         
         // 1. Calculate Centers
-        // Balloon World X is Left Edge. Width is 16px. Center is +8px.
         int32_t balloon_cx = balloon.world_x + (8 << SUBPIXEL_BITS);
 
         // Balloon Y is Bottom Edge. Height is 32px. Center is +16px (Down).
         int32_t balloon_cy = balloon.y + (0 << SUBPIXEL_BITS);
 
-        // 2. Horizontal Check
-        // Width is 16px. Half-width is 8px.
-        // We use 10px threshold for a slightly generous hitbox.
+        // 2. Horizontal Check (10px reach)
         if (labs(bullet_world_x - balloon_cx) < (10 << SUBPIXEL_BITS)) {
             
             // 3. Vertical Check
@@ -196,14 +192,28 @@ void check_bullet_collisions(void) {
             if (labs(bullet_y - balloon_cy) < (18 << SUBPIXEL_BITS)) {
                 
                 // --- HIT! ---
-                balloon.active = false;
-                balloon.respawn_timer = BALLOON_RESPAWN; // 5 sec cooldown
-                
+                // Disable Bullet
                 bullet_active = false;
                 xram0_struct_set(BULLET_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
 
-                // Big Explosion centered on the balloon
-                trigger_explosion(balloon.world_x, balloon_cy);
+                // --- TRIGGER FALL ---
+                balloon.is_falling = true;
+
+                // --- TRIGGER VISUAL BOOM ---
+                // Calculate screen coords for the boom
+                // Center it on the balloon (Balloon Y is the split point)
+                // Boom is 16px tall. To center on Y, Top-Left should be Y - 8.
+                int16_t boom_scr_x = (balloon.world_x - camera_x) >> SUBPIXEL_BITS;
+                int16_t boom_scr_y = (balloon.y >> SUBPIXEL_BITS) - 8; 
+                
+                // Physics: Stop horizontal movement, start dropping
+                balloon.vx = 0; 
+                balloon.vy = (1 << SUBPIXEL_BITS); // Initial downward nudge
+
+                // Trigger explosion at balloon location
+                trigger_boom(boom_scr_x, boom_scr_y);
+                
+                // Optional: Play a small "thud" sound to indicate damage
                 sfx_explosion_small();
                 
                 return;

@@ -23,6 +23,7 @@
 #include "sound.h"
 #include "music.h"
 #include "highscore.h"
+#include "boom.h"
 
 
 unsigned CHOPPER_CONFIG;            // Chopper Sprite Configuration
@@ -533,6 +534,9 @@ void init_game_logic(void) {
         tanks[t].active = false;
     }
 
+    // 4. Reset Booms 
+    reset_boom();
+
     // 4. Update Register 5 Count
     // Previous Count + 2
 
@@ -642,6 +646,8 @@ int main(void)
                 update_enemybase();
                 // Update balloon 
                 update_balloon();
+                // Update boom
+                update_boom();
                 // Update bullets
                 update_bullet();
                 // Check bullet collisions

@@ -10,6 +10,7 @@
 #include "hostages.h"
 #include "jet.h"
 #include "sound.h"
+#include "boom.h"
 
 
 PlayerState player_state = PLAYER_ALIVE;
@@ -110,11 +111,9 @@ void kill_player(void) {
     int16_t screen_x = ((chopper_world_x - camera_x) >> SUBPIXEL_BITS) + 8;
     int16_t screen_y = (chopper_y >> SUBPIXEL_BITS) + 4;
 
-    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, x_pos_px, screen_x);
-    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, y_pos_px, screen_y);
-    
-    // Set to Frame 0
-    xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)BOOM_DATA);
+    // Use shared function
+    trigger_boom(screen_x, screen_y);
+
     sfx_explosion_large(); // Play explosion sound
 }
 
@@ -306,14 +305,14 @@ void update_chopper_state(void) {
         else base_frame = 18; // Nose Up Right
         
         // 4. Boom Animation (Flash Effect)
-        if (death_timer == 5) {
-            // Switch to Boom Frame 1
-            xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(BOOM_DATA + 512));
-        }
-        else if (death_timer == 10) {
-            // Hide Boom
-            xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
-        }
+        // if (death_timer == 5) {
+        //     // Switch to Boom Frame 1
+        //     xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, (uint16_t)(BOOM_DATA + 512));
+        // }
+        // else if (death_timer == 10) {
+        //     // Hide Boom
+        //     xram0_struct_set(BOOM_CONFIG, vga_mode4_sprite_t, y_pos_px, -32);
+        // }
 
         // 5. Ground Impact
         if (chopper_y >= GROUND_Y_SUB) {
