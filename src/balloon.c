@@ -53,37 +53,68 @@ void update_balloon(void) {
             return;
         }
 
-        // --- DETERMINE SPAWN ZONE ---
-        int base_a = -1, base_b = -1;
+        // --- PROGRESS CHECK ---
+        // Only start hunting after 16 hostages have appeared
+        if (total_progress >= 16) {
+            
+            // --- DEFINE BOUNDARIES ---
+            int32_t safety_line = (ENEMY_BASE_LOCATIONS[3] + HOMEBASE_WORLD_X) / 2;
+            int32_t offscreen_margin = 64L << SUBPIXEL_BITS; // Spawn 64px off screen
 
-        if (total_progress >= 48)      { base_a = 0; base_b = 1; }
-        else if (total_progress >= 32) { base_a = 1; base_b = 2; }
-        else if (total_progress >= 16) { base_a = 2; base_b = 3; }
-        
-        // If we are in a valid progression stage
-        if (base_a != -1) {
-            // Calculate Midpoint between the two bases
-            int32_t x1 = ENEMY_BASE_LOCATIONS[base_a];
-            int32_t x2 = ENEMY_BASE_LOCATIONS[base_b];
-            int32_t spawn_x = (x1 + x2) / 2;
+            // --- CALCULATE CANDIDATES ---
+            int32_t camera_left_edge  = camera_x;
+            int32_t camera_right_edge = camera_x + (320L << SUBPIXEL_BITS);
 
-            // VISIBILITY CHECK
-            // Only spawn if off-screen
-            int32_t screen_sub = spawn_x - camera_x;
-            int16_t screen_px = screen_sub >> SUBPIXEL_BITS;
+            int32_t spawn_left_opt  = camera_left_edge - offscreen_margin;
+            int32_t spawn_right_opt = camera_right_edge + offscreen_margin;
+
+            // --- PICK A SIDE ---
+            int32_t chosen_x = 0;
+            
+            // 50/50 Chance, OR biased by player movement? 
+            // Let's go random for unpredictability.
+            bool try_right = (rand() % 2 == 0);
+
+            if (try_right) {
+                // Try spawning ahead/behind on the right
+                if (spawn_right_opt < safety_line) {
+                    chosen_x = spawn_right_opt;
+                } else {
+                    // Right side is blocked by Home Base safety zone. Force Left.
+                    chosen_x = spawn_left_opt;
+                }
+            } else {
+                // Try spawning on the left
+                if (spawn_left_opt > (WORLD_MIN_X_SUB)) {
+                    chosen_x = spawn_left_opt;
+                } else {
+                    // Left side is blocked by World Edge. Force Right.
+                    // (But check safety line again to be sure)
+                    if (spawn_right_opt < safety_line) {
+                        chosen_x = spawn_right_opt;
+                    } else {
+                        return; // Nowhere valid to spawn! (Player is squeezed in a corner?)
+                    }
+                }
+            }
+
+            // --- FINAL VISIBILITY CHECK ---
+            // Ensure we didn't get clamped onto the screen
+            int32_t screen_test = chosen_x - camera_x;
+            int16_t screen_px = screen_test >> SUBPIXEL_BITS;
 
             if (screen_px < -32 || screen_px > 350) {
                 // SPAWN!
                 balloon.active = true;
-                balloon.is_falling = false;
-                balloon.world_x = spawn_x;
-                balloon.y = GROUND_Y_SUB - (60 << SUBPIXEL_BITS); // Start high up
+                balloon.is_falling = false; // Reset falling state
+                balloon.world_x = chosen_x;
+                balloon.y = GROUND_Y_SUB - (60 << SUBPIXEL_BITS); // High altitude
                 balloon.vx = 0;
                 balloon.vy = 0;
                 balloon.anim_frame = 0;
             }
         }
-        return; // Don't render if inactive
+        return; 
     }
 
     // --- CASE A: FALLING (Shot Down) ---
@@ -107,7 +138,7 @@ void update_balloon(void) {
         if (balloon.y >= BALLOON_GROUND_Y) {
             // CRASH!
             trigger_explosion(balloon.world_x, BALLOON_GROUND_Y);
-            sfx_explosion_large(); // Big Boom!
+            sfx_explosion_small(); // crash sound
             
             // Deactivate and start Respawn Timer
             balloon.active = false;
