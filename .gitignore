@@ -2,6 +2,7 @@ __pycache__
 /.rp6502
 /build
 tools
+releases
 CMakeUserPresets.json
 CMakeLists.txt
 .DS_Store
