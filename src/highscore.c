@@ -250,27 +250,24 @@ void enter_initials(uint8_t saved, uint8_t lost) {
         if (RIA.vsync == vsync_last) continue;
         vsync_last = RIA.vsync;
         
-        // 1. Draw UI
-        // Clear center area
-        // (Assuming clear_text_screen was called before this)
-        draw_text(13, 4, "GREAT FLYING!", HUD_COL_GREEN);
-        draw_text( 7, 5, "YOU WILL BE REMEMBERED", HUD_COL_WHITE);
-        
+        // 1. Draw UI (all centered)
+        center_text(4, "GREAT FLYING!", HUD_COL_GREEN);
+        center_text(6, "YOU WILL BE REMEMBERED", HUD_COL_WHITE);
+
         char buf[32];
-        sprintf(buf, "SAVED: %d  LOST: %d", saved, lost);
-        draw_text(10, 9, buf, HUD_COL_WHITE);
-        
-        draw_text(12, 12, "ENTER NAME:", HUD_COL_YELLOW);
-        
-        // Draw Name with Cursor Blink
+        sprintf(buf, "SAVED: %d LOST: %d", saved, lost);
+        center_text_buf(9, buf, HUD_COL_WHITE);
+
+        center_text(11, "ENTER NAME:", HUD_COL_YELLOW);
+
+        // Draw Name with Cursor Blink (centered field)
+        uint8_t name_start_x = 18;  // Center 3-letter name: (40-3)/2 ≈ 18-20
         for (int i = 0; i < 3; i++) {
             char c_buf[2] = {name[i], 0};
             uint8_t col = HUD_COL_WHITE;
-            
             // Blink active char
             if (i == cursor && (vsync_last % 30 < 15)) col = HUD_COL_RED;
-            
-            draw_text(24 + i, 12, c_buf, col);
+            draw_text(name_start_x + i, 12, c_buf, col);
         }
 
         // 2. Handle Input

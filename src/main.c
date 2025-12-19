@@ -566,6 +566,7 @@ bool is_demo_mode = false;
 uint16_t input_idle_timer = 0;
 #define DEMO_START_DELAY    1800   // 30 Seconds (60fps)
 #define GAME_IDLE_TIMEOUT   1800  // 30 Seconds
+static bool title_input_lock = false;
 
 uint8_t anim_timer = 0;
 
@@ -621,13 +622,22 @@ int main(void)
                 // Check Start Button
                 update_music();
 
+                // If we entered here from Demo Mode, wait for all keys to be released
+                if (title_input_lock) {
+                    if (!is_any_input_pressed()) {
+                        title_input_lock = false; // Player let go, ready for input
+                    }
+                }
+
                 // Blink "PRESS START"
                 if ((RIA.vsync / 30) % 2 == 0) {
                     draw_text(4, 11, "PRESS START", HUD_COL_WHITE);
                 } else {
                     draw_text(4, 11, "           ", HUD_COL_BG);
                 }
-                if (is_any_input_pressed()) {
+
+
+                if (!title_input_lock && is_any_input_pressed()) {
                     // Reset idle timer if player is mashing buttons
                     input_idle_timer = 0;
 
@@ -693,10 +703,18 @@ int main(void)
                     // If in Demo Mode, ANY button quits to title
                     if (is_demo_mode) {
                         game_state = STATE_TITLE;
+                        
+                        // Lock Input so we don't accidentally restart game immediately
+                        title_input_lock = true; 
+
+                        // Reset Visuals
+                        respawn_player();        // Resets variables (World X, Camera X)
+                        update_chopper_state();  // FORCE UPDATE: Pushes new variables to XRAM
+                        
                         clear_text_screen();
                         draw_high_score_screen();
                         start_title_music();
-                        continue; // Skip update this frame
+                        continue; 
                     }
                 } 
                 else {
@@ -707,8 +725,15 @@ int main(void)
                     if (is_demo_mode && input_idle_timer > GAME_IDLE_TIMEOUT) {
                         is_demo_mode = false;
                         input_idle_timer = 0;
-                        clear_text_screen();
+                        
                         game_state = STATE_TITLE;
+                        title_input_lock = false; // No lock needed for timeout
+                        
+                        // FIX 2: Reset Visuals (Snap chopper back to base)
+                        respawn_player(); 
+                        update_chopper_state(); // Pushes to XRAM
+                        
+                        clear_text_screen();
                         draw_high_score_screen();
                         start_title_music();
                         continue;
@@ -780,7 +805,7 @@ int main(void)
                     } else {
                         game_state = STATE_GAME_OVER;
                         game_over_timer = 0;
-                        draw_text(15, 7, "GAME OVER", HUD_COL_RED);
+                        center_text(7, "GAME OVER", HUD_COL_RED);
                     }
                 }
 
@@ -825,7 +850,7 @@ int main(void)
                         clear_text_screen(); // Clear the entry UI
                     }
 
-                    draw_text(15, 7, "GAME OVER", HUD_COL_RED);
+                    center_text(7, "GAME OVER", HUD_COL_RED);
                 }
                 update_music();
 

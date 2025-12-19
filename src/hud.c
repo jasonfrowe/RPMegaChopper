@@ -15,6 +15,20 @@ char hud_buffer[MESSAGE_WIDTH + 1]; // +1 for null terminator
 // Centered roughly on Row 6 (below HUD, above ground)
 #define SORTIE_MSG_Y 6 
 
+// Helper function: Center text horizontally (40-char width)
+void center_text(uint8_t y, const char* str, uint8_t color) {
+    uint8_t len = strlen(str);
+    uint8_t x = (40 - len) / 2;
+    draw_text(x, y, str, color);
+}
+
+// For variable-length strings (e.g., stats)
+void center_text_buf(uint8_t y, char* buf, uint8_t color) {
+    uint8_t len = strlen(buf);
+    uint8_t x = (40 - len) / 2;
+    draw_text(x, y, buf, color);
+}
+
 void draw_sortie_message(int lives_left) {
     const char* msg;
     

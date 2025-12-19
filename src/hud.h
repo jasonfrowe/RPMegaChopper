@@ -60,5 +60,7 @@ extern void draw_sortie_message(int lives_left);
 extern void clear_sortie_message(void);
 
 extern char message[];
+extern void center_text(uint8_t y, const char* str, uint8_t color);
+extern void center_text_buf(uint8_t y, char* buf, uint8_t color);
 
 #endif // HUD_H
