@@ -11,6 +11,43 @@
 static HighScoreEntry high_scores[MAX_HIGH_SCORES];
 HighScoreEntry todays_best;
 
+// Draws a line of a specific character
+void draw_repeat_char(uint8_t x, uint8_t y, uint8_t count, uint8_t ch, uint8_t color) {
+    for(int i=0; i<count; i++) {
+        // We can use a simplified draw_text logic here or construct a 1-char string
+        char buf[2] = {ch, 0};
+        draw_text(x + i, y, buf, color);
+    }
+}
+
+void draw_bbs_frame(void) {
+    // 1. TOP BORDER (Row 0)
+    // ╔══════════════════╦══════════════════╗
+    char top_row[41];
+    sprintf(top_row, "\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCB\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB");
+    draw_text(0, 0, top_row, HUD_COL_CYAN);
+
+    // 2. VERTICAL LINES (Rows 1-13)
+    for (int y = 1; y < 14; y++) {
+        draw_text(0,  y, "\xBA", HUD_COL_CYAN); // Left
+        draw_text(19, y, "\xBA", HUD_COL_CYAN); // Middle Divider
+        draw_text(39, y, "\xBA", HUD_COL_CYAN); // Right
+    }
+
+    // 3. TITLE SEPARATOR (Row 2)
+    // ╠══════════════════╬══════════════════╣
+    char mid_row[41];
+    sprintf(mid_row, "\xCC\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCE\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xB9");
+    // Note: \xCE is the cross (╬). If you don't have it, use \xCB (╦) or similar.
+    draw_text(0, 2, mid_row, HUD_COL_CYAN);
+
+    // 4. BOTTOM BORDER (Row 14)
+    // ╚══════════════════╩══════════════════╝
+    char bot_row[41];
+    sprintf(bot_row, "\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCA\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC");
+    draw_text(0, 14, bot_row, HUD_COL_CYAN);
+}
+
 // Helper to clear specific lines for the score screen
 static void clear_rows(uint8_t start_y, uint8_t height) {
     // We can't use a rect clear easily, so we draw spaces
@@ -125,40 +162,73 @@ void insert_high_score(uint8_t saved, uint8_t lost, const char* name) {
 // ============================================================================
 
 void draw_high_score_screen(void) {
-    // Screen is 40x15 chars
     
-    // --- LEFT SIDE: TODAY'S BEST (Col 2) ---
-    draw_text(2, 3, "TODAYS BEST", HUD_COL_YELLOW);
-    
-    char buf[32];
-    sprintf(buf, "ACE: %s", todays_best.name);
-    draw_text(2, 5, buf, HUD_COL_WHITE);
-    
-    sprintf(buf, "SAVED: %d", todays_best.saved);
-    draw_text(2, 7, buf, HUD_COL_GREEN);
-    
-    sprintf(buf, "LOST:  %d", todays_best.lost);
-    draw_text(2, 8, buf, HUD_COL_RED);
+    // --- 1. DRAW FRAME ---
+    draw_bbs_frame();
 
-    // --- RIGHT SIDE: BEST PILOTS (Col 20) ---
-    // Header
-    draw_text(27, 3, "BEST PILOTS", HUD_COL_YELLOW);
-    draw_text(29, 4, "NAM", HUD_COL_WHITE);
-    draw_text(34, 4, "\x7F", HUD_COL_GREEN); // House Icon
-    draw_text(37, 4, "\x0F", HUD_COL_RED);   // Splat Icon
+    // --- 2. HEADER (Row 1) ---
+    // Centered Title
+    draw_text(2, 1, "MEGA CHOPLIFTER", HUD_COL_YELLOW);
+    
+    // Credits/Ver on right?
+    draw_text(28, 1, "v1.4", HUD_COL_GREY);
 
-    // List
+    // --- 3. LEFT PANEL: TODAY'S BEST (Cols 1-18) ---
+    
+    draw_text(4, 3, "TODAY'S BEST", HUD_COL_WHITE);
+    
+    // Ace Name
+    draw_text(2, 5, "\x10 ACE PILOT", HUD_COL_CYAN); // Arrow Icon
+    draw_text(14, 5, todays_best.name, HUD_COL_YELLOW);
+
+    // Stats
+    char buf[20];
+    
+    draw_text(2, 7, "RESCUED:", HUD_COL_GREY);
+    sprintf(buf, "%02d \x7F", todays_best.saved); // Number + House
+    draw_text(14, 7, buf, HUD_COL_GREEN);
+
+    draw_text(2, 8, "CASUALTIES:", HUD_COL_GREY);
+    sprintf(buf, "%02d \x0F", todays_best.lost);  // Number + Splat
+    draw_text(14, 8, buf, HUD_COL_RED);
+
+    // Prompt (Bottom Left)
+    // Blink "PRESS START" based on VSYNC
+    if ((RIA.vsync / 32) % 2 == 0) {
+        draw_text(4, 11, "PRESS START", HUD_COL_WHITE);
+    }
+
+    // --- 4. RIGHT PANEL: HALL OF FAME (Cols 20-38) ---
+    
+    draw_text(25, 3, "HALL OF FAME", HUD_COL_WHITE);
+    
+    // Table Header
+    // #  NAM  H  X
+    draw_text(21, 5, "#", HUD_COL_GREY);
+    draw_text(24, 5, "NAM", HUD_COL_GREY);
+    draw_text(30, 5, "\x7F", HUD_COL_GREEN); // House
+    draw_text(35, 5, "\x0F", HUD_COL_RED);   // Splat
+
+    // List (Rows 5-9) - Top 5 Only to fit
+    // (Or display all 5 compact if MAX_HIGH_SCORES is 5)
     for (int i = 0; i < MAX_HIGH_SCORES; i++) {
-        // Format: "1. AAA   10   02"
-        sprintf(buf, "%d.%s %02d %02d", 
-                i+1, 
-                high_scores[i].name, 
-                high_scores[i].saved, 
-                high_scores[i].lost);
-        
-        // Alternate colors for readability
-        uint8_t col = (i == 0) ? HUD_COL_YELLOW : HUD_COL_WHITE;
-        draw_text(27, 6 + i, buf, col);
+        uint8_t y = 7 + i; // Double spacing? Or single? Let's do 2-line spacing if room
+        if (y > 13) break; // Safety
+
+        // Rank (1, 2, 3...)
+        char rank[2] = {'1' + i, 0};
+        draw_text(21, y, rank, HUD_COL_CYAN);
+
+        // Name
+        draw_text(24, y, high_scores[i].name, HUD_COL_WHITE);
+
+        // Saved
+        sprintf(buf, "%02d", high_scores[i].saved);
+        draw_text(29, y, buf, HUD_COL_GREEN);
+
+        // Lost
+        sprintf(buf, "%02d", high_scores[i].lost);
+        draw_text(34, y, buf, HUD_COL_RED);
     }
 }
 

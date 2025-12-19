@@ -12,6 +12,36 @@ char message[MESSAGE_LENGTH];
 
 char hud_buffer[MESSAGE_WIDTH + 1]; // +1 for null terminator
 
+// Centered roughly on Row 6 (below HUD, above ground)
+#define SORTIE_MSG_Y 6 
+
+void draw_sortie_message(int lives_left) {
+    const char* msg;
+    
+    // Map lives to string
+    // Lives = 3 -> First
+    // Lives = 2 -> Second
+    // Lives = 1 -> Third
+    switch(lives_left) {
+        case 3: msg = "- FIRST SORTIE -"; break;
+        case 2: msg = "- SECOND SORTIE -"; break;
+        case 1: msg = "- THIRD SORTIE -"; break;
+        default: msg = "- SORTIE -"; break;
+    }
+    
+    // Calculate Center X (Screen is 40 chars wide)
+    // strlen is approx 16. 40-16 = 24 / 2 = 12.
+    // We use a hardcoded X for simplicity.
+    uint8_t x = 12; 
+    
+    draw_text(x, SORTIE_MSG_Y, msg, HUD_COL_YELLOW);
+}
+
+void clear_sortie_message(void) {
+    // Overwrite with spaces
+    draw_text(12, SORTIE_MSG_Y, "                 ", HUD_COL_BG);
+}
+
 void update_lives_display(void) {
     for (int i = 0; i < LIVES_STARTING; i++) {
         unsigned cfg = MINICHOPPER_CONFIG + (i * sizeof(vga_mode4_sprite_t));
@@ -53,6 +83,12 @@ void draw_text(uint8_t x, uint8_t y, const char* str, uint8_t color) {
         RIA.rw0 = 0;         // BG
     }
 }
+
+// void draw_ansi_art(uint8_t x, uint8_t y, const char* lines[], uint8_t num_lines, uint8_t color) {
+//     for (uint8_t i = 0; i < num_lines; i++) {
+//         draw_text(x, y + i, lines[i], color);
+//     }
+// }
 
 // Helper to draw: [ICON] [:] [00]
 void draw_hud_stat(uint8_t offset, uint8_t icon, uint8_t color, int value) {

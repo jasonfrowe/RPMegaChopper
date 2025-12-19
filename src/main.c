@@ -552,6 +552,15 @@ GameState game_state = STATE_TITLE;
 int game_over_timer = 0;
 int lives = LIVES_STARTING;
 
+bool sortie_msg_active = false;
+uint8_t sortie_timer = 0;
+
+void trigger_sortie_display(void) {
+    draw_sortie_message(lives);
+    sortie_msg_active = true;
+    sortie_timer = 120; // 2 seconds of flight time before fading
+}
+
 uint8_t anim_timer = 0;
 
 int main(void)
@@ -574,11 +583,12 @@ int main(void)
 
     // Draw initial Title Screen
     clear_text_screen();
-    draw_text(17, 4, "MEGA", HUD_COL_YELLOW);
-    draw_text(14, 6, "CHOPLIFTER", HUD_COL_RED);
-    // Draw High Scores around title
+    // draw_text(17, 4, "MEGA", HUD_COL_YELLOW);
+    // draw_text(14, 6, "CHOPLIFTER", HUD_COL_RED);
+    // // Draw High Scores around title
+    // draw_high_score_screen();
+    // draw_text(13, 14, "PRESS  START", HUD_COL_WHITE);
     draw_high_score_screen();
-    draw_text(13, 14, "PRESS  START", HUD_COL_WHITE);
 
     start_title_music();
 
@@ -604,6 +614,14 @@ int main(void)
             case STATE_TITLE:
                 // Check Start Button
                 update_music();
+
+                // Blink "PRESS START"
+                if ((RIA.vsync / 30) % 2 == 0) {
+                    draw_text(4, 11, "PRESS START", HUD_COL_WHITE);
+                } else {
+                    draw_text(4, 11, "           ", HUD_COL_BG);
+                }
+
                 if (is_action_pressed(0, ACTION_PAUSE) || is_action_pressed(0, ACTION_FIRE)) {
                     
                     // Reset Game
@@ -620,6 +638,7 @@ int main(void)
                     
                     // Clear Title Text
                     clear_text_screen();
+                    trigger_sortie_display();
                     
                     game_state = STATE_PLAYING;
                     stop_music();
@@ -671,6 +690,21 @@ int main(void)
                 update_hud();
                 update_lives_display(); // Show remaining lives
 
+                // --- SORTIE MESSAGE LOGIC ---
+                if (sortie_msg_active) {
+                    // Only count down if player has TAKEN OFF (is in the air)
+                    // GROUND_Y_SUB is defined in player.h/constants.h
+                    if (chopper_y < GROUND_Y_SUB) {
+                        sortie_timer--;
+                    }
+                    
+                    // If timer expired, clear it
+                    if (sortie_timer == 0) {
+                        clear_sortie_message();
+                        sortie_msg_active = false;
+                    }
+                }
+
                 // 3. CHECK END GAME CONDITIONS
                 
                 // Condition A: Ran out of lives (Existing)
@@ -678,6 +712,7 @@ int main(void)
                     lives--;
                     if (lives > 0) {
                         respawn_player();
+                        trigger_sortie_display();
                     } else {
                         game_state = STATE_GAME_OVER;
                         game_over_timer = 0;
@@ -721,6 +756,7 @@ int main(void)
                     draw_text(15, 7, "GAME OVER", HUD_COL_RED);
                 }
                 update_music();
+
                 game_over_timer++;
                 // Wait 10 seconds (600 frames) then return to title
                 if (game_over_timer > 600) {
@@ -728,11 +764,12 @@ int main(void)
                     game_state = STATE_TITLE;
                     
                     clear_text_screen();
-                    draw_text(18, 4, "MEGA", HUD_COL_YELLOW);
-                    draw_text(15, 6, "CHOPLIFTER", HUD_COL_RED);
-                    // Draw High Scores around title
+                    // draw_text(18, 4, "MEGA", HUD_COL_YELLOW);
+                    // draw_text(15, 6, "CHOPLIFTER", HUD_COL_RED);
+                    // // Draw High Scores around title
+                    // draw_high_score_screen();
+                    // draw_text(14, 14, "PRESS  START", HUD_COL_WHITE);
                     draw_high_score_screen();
-                    draw_text(14, 14, "PRESS  START", HUD_COL_WHITE);
                     start_title_music();
                 }
                 break;

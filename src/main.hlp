@@ -1,3 +1,14 @@
 #!RP6502
-# RPMegaChopper
-# This information is displayed with the HELP and INFO monitor commands.
+# Mega Chopper
+# 
+# OBJECTIVE: Rescue 64 hostages from 4 base camps.
+# 
+# CONTROLS:
+# D-Pad/Arrows: Control your Chopper 
+#   Up: Climb  Down: Dive
+#   Left/Right: Foward/Back
+# 
+# WEAPONS:
+# A Button/SPACE: Fire Gun / Drop bomb
+# X Button/L-SHIFT: Rotate chopper
+# 
