@@ -58,5 +58,6 @@ typedef struct {
 extern void init_input_system(void);
 extern void handle_input(void);
 extern bool is_action_pressed(uint8_t player_id, GameAction action);
+extern bool is_any_input_pressed(void);
 
 #endif // INPUT_H

@@ -560,6 +560,12 @@ void trigger_sortie_display(void) {
     sortie_msg_active = true;
     sortie_timer = 120; // 2 seconds of flight time before fading
 }
+    
+// Demo Mode Variables
+bool is_demo_mode = false;
+uint16_t input_idle_timer = 0;
+#define DEMO_START_DELAY    600   // 10 Seconds (60fps)
+#define GAME_IDLE_TIMEOUT   1800  // 30 Seconds
 
 uint8_t anim_timer = 0;
 
@@ -621,27 +627,56 @@ int main(void)
                 } else {
                     draw_text(4, 11, "           ", HUD_COL_BG);
                 }
+                if (is_any_input_pressed()) {
+                    // Reset idle timer if player is mashing buttons
+                    input_idle_timer = 0;
 
-                if (is_action_pressed(0, ACTION_PAUSE) || is_action_pressed(0, ACTION_FIRE)) {
-                    
-                    // Reset Game
-                    init_game_logic(); // Resets hostages, bases, etc.
+                    if (is_action_pressed(0, ACTION_PAUSE) || is_action_pressed(0, ACTION_FIRE)) {
+                        
+                        // Reset Game
+                        init_game_logic(); // Resets hostages, bases, etc.
 
-                    // 2. Enemy Resets 
-                    reset_tanks();
-                    reset_tank_bullets();
-                    reset_jet();
-                    reset_balloon();
+                        // Disable Demo Mode
+                        is_demo_mode = false; // Normal Mode
 
-                    lives = LIVES_STARTING;
-                    respawn_player();  // Moves chopper to start
+                        // 2. Enemy Resets 
+                        reset_tanks();
+                        reset_tank_bullets();
+                        reset_jet();
+                        reset_balloon();
+
+                        lives = LIVES_STARTING;
+                        respawn_player();  // Moves chopper to start
+                        
+                        // Clear Title Text
+                        clear_text_screen();
+                        trigger_sortie_display();
+                        
+                        game_state = STATE_PLAYING;
+                        stop_music();
+                    }
+                } 
+                else {
+                    // No Input -> Tick Timer
+                    input_idle_timer++;
                     
-                    // Clear Title Text
-                    clear_text_screen();
-                    trigger_sortie_display();
-                    
-                    game_state = STATE_PLAYING;
-                    stop_music();
+                    // TIMEOUT -> START DEMO
+                    if (input_idle_timer > DEMO_START_DELAY) {
+                        stop_music();
+                        init_game_logic();
+
+                        reset_tanks();     // Sets tanks_triggered = false;
+                        reset_tank_bullets();
+
+                        is_demo_mode = true; // Auto-Pilot
+                        lives = 3; // Invincible-ish
+                        
+                        respawn_player();
+                        clear_text_screen();
+                        draw_text(16, 5, "DEMO MODE", HUD_COL_CYAN); // Label it
+                        game_state = STATE_PLAYING;
+                        input_idle_timer = 0;
+                    }
                 }
                 break;
 
@@ -650,6 +685,35 @@ int main(void)
 
                 // Update animation frames
                 anim_timer++;
+
+                // 1. Handle IDLE / DEMO EXIT Logic
+                if (is_any_input_pressed()) {
+                    input_idle_timer = 0;
+                    
+                    // If in Demo Mode, ANY button quits to title
+                    if (is_demo_mode) {
+                        game_state = STATE_TITLE;
+                        clear_text_screen();
+                        draw_high_score_screen();
+                        start_title_music();
+                        continue; // Skip update this frame
+                    }
+                } 
+                else {
+                    // No input
+                    input_idle_timer++;
+                    
+                    // If Real Player is idle for 30s, quit to Title
+                    if (is_demo_mode && input_idle_timer > GAME_IDLE_TIMEOUT) {
+                        is_demo_mode = false;
+                        input_idle_timer = 0;
+                        clear_text_screen();
+                        game_state = STATE_TITLE;
+                        draw_high_score_screen();
+                        start_title_music();
+                        continue;
+                    }
+                }
 
                 // Update player state
                 update_chopper_state();
@@ -737,6 +801,14 @@ int main(void)
                         draw_text(13, 7, "MISSION FAILED", HUD_COL_RED);
                     }
                 }
+
+                // 3. Demo Death Handling
+                // If demo chopper dies, just reset the demo
+                if (is_demo_mode && player_state == PLAYER_WAITING_FOR_RESPAWN) {
+                    respawn_player();
+                    draw_text(16, 5, "DEMO MODE", HUD_COL_CYAN);
+                }
+
                 break;
 
             // --- GAME OVER ---

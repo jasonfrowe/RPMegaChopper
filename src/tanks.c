@@ -9,6 +9,9 @@
 #include "enemybase.h"
 #include "hostages.h"
 
+// Demo mode
+extern bool is_demo_mode;
+
 // --- TANK STATE ---
 bool tanks_triggered = false; // Have we collected 4 hostages yet?
 
@@ -105,7 +108,7 @@ void update_tanks(void) {
     int total_progress = hostages_rescued_count + hostages_on_board;
     
     if (!tanks_triggered) {
-        if (total_progress >= TANK_SPAWN_TRIGGER) {
+        if ((total_progress >= TANK_SPAWN_TRIGGER) || is_demo_mode) {
             tanks_triggered = true;
             // FILL ALL GARAGES
             for (int i = 0; i < NUM_ENEMY_BASES; i++) {

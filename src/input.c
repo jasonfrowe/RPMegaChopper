@@ -19,6 +19,19 @@ gamepad_t gamepad[GAMEPAD_COUNT];
 uint8_t keystates[KEYBOARD_BYTES] = {0};
 bool handled_key = false;
 
+// Helper for checking if any input is pressed (mainly for demo mode)
+bool is_any_input_pressed(void) {
+    // Check all relevant bits
+    if (is_action_pressed(0, ACTION_THRUST)) return true;
+    if (is_action_pressed(0, ACTION_REVERSE_THRUST)) return true;
+    if (is_action_pressed(0, ACTION_ROTATE_LEFT)) return true;
+    if (is_action_pressed(0, ACTION_ROTATE_RIGHT)) return true;
+    if (is_action_pressed(0, ACTION_FIRE)) return true;
+    if (is_action_pressed(0, ACTION_SUPER_FIRE)) return true;
+    if (is_action_pressed(0, ACTION_PAUSE)) return true;
+    return false;
+}
+
 /**
  * Reset to default button mappings for a specific player
  */

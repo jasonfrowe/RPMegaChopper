@@ -57,6 +57,8 @@ uint16_t get_chopper_sprite_ptr(int frame_idx, int part) {
     return CHOPPER_DATA + frame_offset + part_offset;
 }
 
+extern bool is_demo_mode;
+
 
 void update_chopper_animation(uint8_t frame)
 {
@@ -133,12 +135,67 @@ void update_chopper_state(void) {
     // =========================================================
     if (player_state == PLAYER_ALIVE) {
 
-        // --- INPUT READING ---
-        bool input_left = is_action_pressed(0, ACTION_ROTATE_LEFT);
-        bool input_right = is_action_pressed(0, ACTION_ROTATE_RIGHT);
-        bool input_up = is_action_pressed(0, ACTION_THRUST);
-        bool input_down = is_action_pressed(0, ACTION_REVERSE_THRUST);
-        bool input_btn2 = is_action_pressed(0, ACTION_SUPER_FIRE);
+        bool input_left = false;
+        bool input_right = false;
+        bool input_up = false;
+        bool input_down = false;
+        bool input_btn2 = false;
+
+        static int8_t demo_direction = -1; // -1 = Left, 1 = Right
+        static uint8_t demo_hover_cooldown = 0;
+
+        if (is_demo_mode) {
+            // ---------------------------------------------------------
+        // 1. HORIZONTAL AI (Patrol World)
+        // ---------------------------------------------------------
+        // Define "Turnaround Points" slightly inside the world boundaries
+        // so we don't hit the hard clamp.
+        int32_t turn_left_x  = WORLD_MIN_X_SUB + (200 << SUBPIXEL_BITS);
+        int32_t turn_right_x = WORLD_MAX_X_SUB - (200 << SUBPIXEL_BITS);
+
+        // Check Position
+        if (chopper_world_x <= turn_left_x) {
+            demo_direction = 1; // Fly Right
+        }
+        else if (chopper_world_x >= turn_right_x) {
+            demo_direction = -1; // Fly Left
+        }
+
+        // Apply Input
+        if (demo_direction == -1) input_left = true;
+        else input_right = true;
+
+        // ---------------------------------------------------------
+        // 2. VERTICAL AI (Bobbing / Hysteresis)
+        // ---------------------------------------------------------
+        // Target Altitude: 60 pixels from top
+        int16_t target_alt = (60 << SUBPIXEL_BITS);
+
+        if (demo_hover_cooldown > 0) {
+            // Coasting / Falling Phase
+            demo_hover_cooldown--;
+            // No input_up -> Gravity takes over
+        } 
+        else {
+            // Climbing Phase
+            if (chopper_y > target_alt) {
+                input_up = true; // Apply Thrust
+            } 
+            else {
+                // We reached the top! Cut engines.
+                // Set timer to ~45 frames (0.75 seconds) to let it drift down
+                demo_hover_cooldown = 45; 
+            }
+        }
+        } 
+        else {
+            // --- REAL PLAYER INPUT ---
+            input_left = is_action_pressed(0, ACTION_ROTATE_LEFT);
+            input_right = is_action_pressed(0, ACTION_ROTATE_RIGHT);
+            input_up = is_action_pressed(0, ACTION_THRUST);
+            input_down = is_action_pressed(0, ACTION_REVERSE_THRUST);
+            input_btn2 = is_action_pressed(0, ACTION_SUPER_FIRE);
+        }
         
         // --- TURN LOGIC (Button 2) ---
         if (input_btn2 && !btn2_last_state && !is_turning && !is_landed) {
