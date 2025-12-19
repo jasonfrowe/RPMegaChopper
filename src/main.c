@@ -564,7 +564,7 @@ void trigger_sortie_display(void) {
 // Demo Mode Variables
 bool is_demo_mode = false;
 uint16_t input_idle_timer = 0;
-#define DEMO_START_DELAY    600   // 10 Seconds (60fps)
+#define DEMO_START_DELAY    1800   // 30 Seconds (60fps)
 #define GAME_IDLE_TIMEOUT   1800  // 30 Seconds
 
 uint8_t anim_timer = 0;

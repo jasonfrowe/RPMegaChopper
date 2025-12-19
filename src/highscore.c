@@ -171,7 +171,7 @@ void draw_high_score_screen(void) {
     draw_text(2, 1, "MEGA CHOPLIFTER", HUD_COL_YELLOW);
     
     // Credits/Ver on right?
-    draw_text(28, 1, "v1.4", HUD_COL_GREY);
+    draw_text(24, 1, "WAR UPDATES", HUD_COL_GREY);
 
     // --- 3. LEFT PANEL: TODAY'S BEST (Cols 1-18) ---
     
@@ -198,21 +198,25 @@ void draw_high_score_screen(void) {
         draw_text(4, 11, "PRESS START", HUD_COL_WHITE);
     }
 
+
+    draw_text(21, 3, "NEW PILOTS NEEDED", HUD_COL_RED);
+    draw_text(25, 4, "BE A HERO", HUD_COL_GREEN);
+
     // --- 4. RIGHT PANEL: HALL OF FAME (Cols 20-38) ---
     
-    draw_text(25, 3, "HALL OF FAME", HUD_COL_WHITE);
+    draw_text(24, 6, "HALL OF FAME", HUD_COL_WHITE);
     
     // Table Header
     // #  NAM  H  X
-    draw_text(21, 5, "#", HUD_COL_GREY);
-    draw_text(24, 5, "NAM", HUD_COL_GREY);
-    draw_text(30, 5, "\x7F", HUD_COL_GREEN); // House
-    draw_text(35, 5, "\x0F", HUD_COL_RED);   // Splat
+    draw_text(21, 8, "#", HUD_COL_GREY);
+    draw_text(24, 8, "NAM", HUD_COL_GREY);
+    draw_text(30, 8, "\x7F", HUD_COL_GREEN); // House
+    draw_text(35, 8, "\x0F", HUD_COL_RED);   // Splat
 
     // List (Rows 5-9) - Top 5 Only to fit
     // (Or display all 5 compact if MAX_HIGH_SCORES is 5)
     for (int i = 0; i < MAX_HIGH_SCORES; i++) {
-        uint8_t y = 7 + i; // Double spacing? Or single? Let's do 2-line spacing if room
+        uint8_t y = 9 + i; // Double spacing? Or single? Let's do 2-line spacing if room
         if (y > 13) break; // Safety
 
         // Rank (1, 2, 3...)
