@@ -253,13 +253,14 @@ void enter_initials(uint8_t saved, uint8_t lost) {
         // 1. Draw UI
         // Clear center area
         // (Assuming clear_text_screen was called before this)
-        draw_text(13, 5, "GREAT FLYING!", HUD_COL_GREEN);
+        draw_text(13, 4, "GREAT FLYING!", HUD_COL_GREEN);
+        draw_text( 8, 5, "YOU WILL BE REMEMBERED", HUD_COL_WHITE);
         
         char buf[32];
         sprintf(buf, "SAVED: %d  LOST: %d", saved, lost);
-        draw_text(10, 7, buf, HUD_COL_WHITE);
+        draw_text(10, 9, buf, HUD_COL_WHITE);
         
-        draw_text(12, 10, "ENTER NAME:", HUD_COL_YELLOW);
+        draw_text(12, 12, "ENTER NAME:", HUD_COL_YELLOW);
         
         // Draw Name with Cursor Blink
         for (int i = 0; i < 3; i++) {
@@ -269,7 +270,7 @@ void enter_initials(uint8_t saved, uint8_t lost) {
             // Blink active char
             if (i == cursor && (vsync_last % 30 < 15)) col = HUD_COL_RED;
             
-            draw_text(24 + i, 10, c_buf, col);
+            draw_text(24 + i, 12, c_buf, col);
         }
 
         // 2. Handle Input
