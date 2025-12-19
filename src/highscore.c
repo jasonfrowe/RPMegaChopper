@@ -254,7 +254,7 @@ void enter_initials(uint8_t saved, uint8_t lost) {
         // Clear center area
         // (Assuming clear_text_screen was called before this)
         draw_text(13, 4, "GREAT FLYING!", HUD_COL_GREEN);
-        draw_text( 8, 5, "YOU WILL BE REMEMBERED", HUD_COL_WHITE);
+        draw_text( 7, 5, "YOU WILL BE REMEMBERED", HUD_COL_WHITE);
         
         char buf[32];
         sprintf(buf, "SAVED: %d  LOST: %d", saved, lost);
