@@ -226,6 +226,13 @@ void draw_high_score_screen(void) {
         // Name
         draw_text(24, y, high_scores[i].name, HUD_COL_GREY);
 
+        // If Total Accounted For (Saved + Lost) == 64 (Total Hostages)
+        // Then the player finished the game (didn't Game Over early)
+        if ((high_scores[i].saved + high_scores[i].lost) >= 64) {
+            // Draw Gold Crown/Diamond next to name
+            draw_text(27, y, "\x04", HUD_COL_YELLOW); 
+        }
+
         // Saved
         sprintf(buf, "%02d", high_scores[i].saved);
         draw_text(29, y, buf, HUD_COL_GREEN);

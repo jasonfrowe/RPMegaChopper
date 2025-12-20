@@ -49,6 +49,7 @@
 #define ICON_DEAD_SPLAT  0x0F // ☼ (Explosion/Splat)
 #define ICON_DEAD_GHOST  0x01 // ☺ (Hollow Face)
 #define ICON_DEAD_GRAVE  0xC5 // ┼ (Grave Marker)  
+#define ICON_CROWN       0x04 // ♦ (Diamond/Gem to indicate completion)
 
 
 extern void update_hud(void);
