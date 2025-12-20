@@ -148,12 +148,13 @@ void update_jet(void) {
         
         // Horizontal distance to chopper center
         int32_t chop_cx = chopper_world_x + (16 << SUBPIXEL_BITS);
-        int32_t dist = jet.world_x - chop_cx; // Signed
+        int32_t jet_cx  = jet.world_x + (8 << SUBPIXEL_BITS); // <--- NEW: Use Jet Center
+        int32_t dist    = jet_cx - chop_cx; 
 
         if (jet.weapon_type == WEAPON_BOMB) {
             
             // Physics: Bomb travels forward ~65px while falling from 80px height
-            const int32_t DROP_LEAD = (58 << SUBPIXEL_BITS); //72 was the expected value
+            const int32_t DROP_LEAD = (68 << SUBPIXEL_BITS); //72 was the expected value
             const int32_t DROP_WINDOW = (10 << SUBPIXEL_BITS); // Tolerance
             
             bool should_drop = false;
