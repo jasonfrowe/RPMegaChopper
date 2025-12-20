@@ -204,7 +204,7 @@ void draw_high_score_screen(void) {
 
     // --- 4. RIGHT PANEL: HALL OF FAME (Cols 20-38) ---
     
-    draw_text(24, 6, "HALL OF FAME", HUD_COL_WHITE);
+    draw_text(24, 6, "HALL OF FAME", HUD_COL_MAGENTA);
     
     // Table Header
     // #  NAM  H  X
@@ -224,7 +224,7 @@ void draw_high_score_screen(void) {
         draw_text(21, y, rank, HUD_COL_CYAN);
 
         // Name
-        draw_text(24, y, high_scores[i].name, HUD_COL_WHITE);
+        draw_text(24, y, high_scores[i].name, HUD_COL_GREY);
 
         // Saved
         sprintf(buf, "%02d", high_scores[i].saved);

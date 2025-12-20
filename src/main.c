@@ -568,6 +568,9 @@ uint16_t input_idle_timer = 0;
 #define GAME_IDLE_TIMEOUT   1800  // 30 Seconds
 static bool title_input_lock = false;
 
+// Title Screen indicator
+bool is_title_screen = false;
+
 uint8_t anim_timer = 0;
 
 int main(void)
@@ -619,8 +622,15 @@ int main(void)
         switch (game_state) {
             // --- TITLE SCREEN ---
             case STATE_TITLE:
-                // Check Start Button
+
+                is_title_screen = true;
+
+                update_chopper_state();
                 update_music();
+                update_clouds();
+                update_landing();
+                update_homebase();
+                update_flags();
 
                 // If we entered here from Demo Mode, wait for all keys to be released
                 if (title_input_lock) {
@@ -629,12 +639,20 @@ int main(void)
                     }
                 }
 
-                // Blink "PRESS START"
-                if ((RIA.vsync / 30) % 2 == 0) {
-                    draw_text(4, 11, "PRESS START", HUD_COL_WHITE);
-                } else {
-                    draw_text(4, 11, "           ", HUD_COL_BG);
-                }
+                // Cycle "PRESS START" colors
+                // Speed: Change color every 8 frames (~0.13s)
+                const uint8_t ps_colors[] = { 
+                    HUD_COL_WHITE, 
+                    HUD_COL_YELLOW, 
+                    HUD_COL_CYAN, 
+                    HUD_COL_GREEN, 
+                    HUD_COL_MAGENTA, 
+                    HUD_COL_RED 
+                };
+                
+                // Calculate index: (Time / Speed) % Count
+                int color_idx = (RIA.vsync / 8) % 6; 
+                draw_text(4, 11, "PRESS START", ps_colors[color_idx]);
 
 
                 if (!title_input_lock && is_any_input_pressed()) {
@@ -692,6 +710,8 @@ int main(void)
 
             // --- PLAYING ---
             case STATE_PLAYING:
+
+                is_title_screen = false;
 
                 // Update animation frames
                 anim_timer++;

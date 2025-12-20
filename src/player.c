@@ -12,6 +12,7 @@
 #include "sound.h"
 #include "boom.h"
 
+extern bool is_title_screen;
 
 PlayerState player_state = PLAYER_ALIVE;
 uint8_t death_timer = 0; // Generic timer for death animations
@@ -97,7 +98,9 @@ void respawn_player(void) {
     reset_jet();
 
     // Restart Engine Idle Sound immediately
-    update_chopper_sound(0);
+    if (!is_title_screen) {
+        update_chopper_sound(0);
+    }
     
     // Note: We do NOT reset hostages_rescued or destroyed bases.
     // The war continues!
@@ -337,8 +340,9 @@ void update_chopper_state(void) {
         
         // Pass total speed (scaled down to fit 16-bit comfortably if needed)
         // velocity_x is subpixels (e.g. 32).
-        update_chopper_sound(abs_vx + abs_vy);
-        
+        if (!is_title_screen) {
+            update_chopper_sound(abs_vx + abs_vy);
+        }
 
     }
 
