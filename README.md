@@ -9,6 +9,22 @@ Fly behind enemy lines in your **red-trimmed rescue chopper**, save 64 brave hos
 
 Armed with **precision physics** and **heavy firepower**, you'll hover, rotate, bomb, and bullet your way to glory. *Eh? Who's ready to save the day?*
 
+### 📄 Add to README.md
+
+## 📩 **Mission Briefing: Operation Northern Lights**
+**TO:** Captain Neutrino Snow, 1st Rotor Wing  
+**FROM:** HQ (Sudbury Deep Command)  
+**SUBJECT:** P.O.W. Extraction Protocol
+
+Listen up, ace. The enemy has 64 of our best peacekeepers locked down in four fortified bunkers across enemy territory. A direct assault is suicide, but Intelligence has a plan.
+
+**CSIS operatives have already infiltrated the camps.** They've rigged the blast doors of every prison block with remote-detonated shaped charges. They are marked with a **Red Target Indicator** near the foundation.
+
+**Your Orders:**
+1.  **Precision Strike**: You must land a single, accurate shot on the **Red Weak Point** of each base.
+2.  **Breach**: The shaped charge will blow the doors outward, unharmed, allowing the hostages to escape.
+3.  **Extract**: Touch down, load them up (16 at a time), and get them back to the Canadian base.
+
 ## 🎮 **Gameplay: Heroic Hostage Havoc**
 Command your chopper through scrolling deserts and hostile airspace. Your mission is simple, but survival is not:
 
@@ -28,7 +44,7 @@ Command your chopper through scrolling deserts and hostile airspace. Your missio
 | **Rotate**      | Button 2 – Tap to face left, forward (hover), or right. |
 | **Fly**         | Joystick/D-pad – Up/down for altitude, left/right to bank and scroll. |
 
-**Pro Tip**: Hover forward-facing over tanks to drop **depth-charge bombs**. The altitude determines if you hit the tank or the ground!
+**Pro Tip**: Hover forward-facing over tanks to drop **tank busting bombs**. The altitude determines if you hit the tank or the ground!
 
 ## ⭐ **Features**
 - **64 Hostages Across 4 Bases** – A full campaign with escalating difficulty.
