@@ -9,8 +9,6 @@ Fly behind enemy lines in your **red-trimmed rescue chopper**, save 64 brave hos
 
 Armed with **precision physics** and **heavy firepower**, you'll hover, rotate, bomb, and bullet your way to glory. *Eh? Who's ready to save the day?*
 
-### 📄 Add to README.md
-
 ## 📩 **Mission Briefing: Operation Northern Lights**
 **TO:** Captain Neutrino Snow, 1st Rotor Wing  
 **FROM:** HQ (Sudbury Deep Command)  
