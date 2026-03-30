@@ -1,10 +1,8 @@
 {
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "cmake.configureSettings": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+    },
     "cmake.showSystemKits": false,
-    "cmake.preferredGenerators": [
-        "Ninja",
-        "Unix Makefiles",
-    ],
     "cmake.options.advanced": {
         "launch": {
             "statusBarVisibility": "hidden",
@@ -13,5 +11,4 @@
             "statusBarVisibility": "hidden",
         }
     },
-    "C_Cpp.errorSquiggles": "disabled",
 }

@@ -6,6 +6,7 @@ set(LLVM_MOS_PLATFORM rp6502)
 find_package(llvm-mos-sdk REQUIRED)
 
 project(RPMegaChopper C CXX ASM)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(RPMegaChopper)
 rp6502_asset(RPMegaChopper 0x10000 images/Chopper.bin)
@@ -27,29 +28,10 @@ rp6502_asset(RPMegaChopper 0x1E388 images/Balloon.bin)
 rp6502_asset(RPMegaChopper 0x1EF88 images/Jet.bin)
 rp6502_asset(RPMegaChopper 0x1F188 images/Bomb.bin)
 rp6502_asset(RPMegaChopper 0x1F208 images/Minichopper.bin)
+rp6502_asset(RPMegaChopper help src/main.hlp)
 rp6502_executable(RPMegaChopper
-    Chopper.bin.rp6502
-    Tiles_Ground.bin.rp6502
-    Cloud_A.bin.rp6502
-    Cloud_B.bin.rp6502
-    Cloud_C.bin.rp6502
-    LandingPad.bin.rp6502
-    HomeBase.bin.rp6502
-    EnemyBase.bin.rp6502
-    Flags.bin.rp6502
-    Hostages.bin.rp6502
-    bullet.bin.rp6502
-    Explosion.bin.rp6502
-    SmallExplode.bin.rp6502
-    Tank.bin.rp6502
-    Boom.bin.rp6502
-    Balloon.bin.rp6502
-    Jet.bin.rp6502
-    Bomb.bin.rp6502
-    Minichopper.bin.rp6502
     DATA file
     RESET file
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.hlp
 )
 target_sources(RPMegaChopper PRIVATE
     src/main.c
