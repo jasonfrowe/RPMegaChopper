@@ -163,6 +163,9 @@ extern unsigned GROUND_MAP_END;
 // Button definitions
 #define KEY_ESC 0x29       // ESC key
 #define KEY_ENTER 0x28     // ENTER key
+#define KEY_F4      0x3d   // F4 key
+#define KEY_LEFTALT  0xe2  // Left Alt key
+#define KEY_RIGHTALT 0xe6  // Right Alt key
 
 // Hardware button bit masks - DPAD
 #define GP_DPAD_UP        0x01

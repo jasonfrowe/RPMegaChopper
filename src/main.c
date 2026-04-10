@@ -893,8 +893,8 @@ int main(void)
         }
 
 
-        // Check for ESC key to exit
-        if (key(KEY_ESC)) {
+        // Check for ALT+F4 to exit
+        if ((key(KEY_LEFTALT) || key(KEY_RIGHTALT)) && key(KEY_F4)) {
             printf("Exiting game...\n");
             break;
         }
