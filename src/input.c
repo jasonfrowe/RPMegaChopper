@@ -19,6 +19,47 @@ gamepad_t gamepad[GAMEPAD_COUNT];
 uint8_t keystates[KEYBOARD_BYTES] = {0};
 bool handled_key = false;
 
+#define ANALOG_DEADZONE 32
+
+static bool is_gamepad_connected(uint8_t player_id)
+{
+    return (gamepad[player_id].dpad & GP_CONNECTED) != 0;
+}
+
+static bool is_analog_positive_pressed(int8_t axis)
+{
+    return axis >= ANALOG_DEADZONE;
+}
+
+static bool is_analog_negative_pressed(int8_t axis)
+{
+    return axis <= -ANALOG_DEADZONE;
+}
+
+static bool is_directional_action_pressed(uint8_t player_id, GameAction action)
+{
+    switch (action) {
+        case ACTION_THRUST:
+            return ((gamepad[player_id].dpad & GP_DPAD_UP) != 0) ||
+                   ((gamepad[player_id].sticks & GP_LSTICK_UP) != 0) ||
+                   is_analog_negative_pressed(gamepad[player_id].ly);
+        case ACTION_REVERSE_THRUST:
+            return ((gamepad[player_id].dpad & GP_DPAD_DOWN) != 0) ||
+                   ((gamepad[player_id].sticks & GP_LSTICK_DOWN) != 0) ||
+                   is_analog_positive_pressed(gamepad[player_id].ly);
+        case ACTION_ROTATE_LEFT:
+            return ((gamepad[player_id].dpad & GP_DPAD_LEFT) != 0) ||
+                   ((gamepad[player_id].sticks & GP_LSTICK_LEFT) != 0) ||
+                   is_analog_negative_pressed(gamepad[player_id].lx);
+        case ACTION_ROTATE_RIGHT:
+            return ((gamepad[player_id].dpad & GP_DPAD_RIGHT) != 0) ||
+                   ((gamepad[player_id].sticks & GP_LSTICK_RIGHT) != 0) ||
+                   is_analog_positive_pressed(gamepad[player_id].lx);
+        default:
+            return false;
+    }
+}
+
 // Helper for checking if any input is pressed (mainly for demo mode)
 bool is_any_input_pressed(void) {
     // Check all relevant bits
@@ -205,8 +246,13 @@ bool is_action_pressed(uint8_t player_id, GameAction action)
     }
     
     // Only check gamepad if one is connected
-    if (!(gamepad[player_id].dpad & GP_CONNECTED)) {
+    if (!is_gamepad_connected(player_id)) {
         return false;
+    }
+
+    // Movement actions always accept D-pad + digital stick + analog axis.
+    if (is_directional_action_pressed(player_id, action)) {
+        return true;
     }
     
     // Check gamepad

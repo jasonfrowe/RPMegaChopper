@@ -1,4 +1,8 @@
 {
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "cmake.environment": {
+        "PATH": "/Users/rowe/Software/rp6502/llvm-mos-sdk/install/bin:${env:PATH}"
+    },
     "cmake.configureSettings": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
     },
